@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Koelkast Shop</title>
+  <!-- Speels lettertype -->
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Algemene styling met een vrolijke achtergrond en speels lettertype */
+    body {
+      font-family: 'Comic Neue', cursive, sans-serif;
+      background: linear-gradient(to bottom right, #fceabb, #f8b500);
+      color: #333;
+      padding: 20px;
+      margin: 0;
+    }
+    .main-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    /* Bij kleinere schermen onder elkaar */
+    @media (max-width: 768px) {
+      .main-wrapper {
+        flex-direction: column;
+        align-items: center;
+      }
+      .side-wrapper {
+        width: 100%;
+      }
+    }
+    /* Linkerkolom: Hoofdinterface voor categorie‑selectie */
+    #mainContainer {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+      max-width: 500px;
+      width: 100%;
+    }
+    /* Rechterkolom: Acties en overzicht */
+    .side-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 400px;
+      width: 100%;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    h1, h2 {
+      color: #ff6b81;
+      margin-top: 0;
+    }
+    /* Styling voor de vierkante categorieknoppen */
+    .product {
+      margin: 10px;
+      padding: 15px;
+      border: 2px solid #f8b500;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #fff;
+      border-radius: 15px;
+      transition: all 0.3s ease;
+      width: 150px;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .product:hover, .product.selected {
+      background-color: #ffeaa7;
+      transform: scale(1.05);
+    }
+    button {
+      margin-top: 20px;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 15px;
+      border: none;
+      background-color: #ff6b81;
+      color: #fff;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background-color: #ff4757;
+      transform: scale(1.03);
+    }
+    button:active {
+      background-color: #ff2e2e;
+    }
+    .delete-btn {
+      background-color: #ff7979;
+    }
+    input, select {
+      width: 95%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    table, th, td {
+      border: 1px solid #f8b500;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #ff6b81;
+      color: #fff;
+    }
+    .admin-section {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+    }
+    .admin-section button {
+      margin-top: 10px;
+      width: auto;
+    }
+    .admin-section div {
+      margin-top: 10px;
+    }
+    /* Notificatie styling */
+    #notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 1000;
+      display: none;
+    }
+    #notification.show {
+      opacity: 1;
+    }
+    #notification.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #notification.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    /* Modal styling voor showPurchases */
+    #modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      z-index: 1001;
+      max-height: 80%;
+      overflow-y: auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    #modal button {
+      margin-top: 10px;
+      width: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Notificatie-element -->
+  <div id="notification"></div>
+
+  <div class="main-wrapper">
+    <!-- Linkerkolom: Hoofdinterface voor categorie‑selectie -->
+    <div id="mainContainer">
+      <h1>Koelkast Shop</h1>
+      <p>
+        Voer je naam in en kies één of meerdere categorieën (klik meerdere keren voor meerdere stuks; rechtermuisklik om een klik ongedaan te maken):
+      </p>
+      <!-- Datalist voor naamselectie -->
+      <input type="text" id="username" placeholder="Jouw naam" list="usernames" />
+      <datalist id="usernames"></datalist>
+      <!-- Container voor de vier categorie-knoppen -->
+      <div id="products" style="display: flex; flex-wrap: wrap;"></div>
+    </div>
+
+    <!-- Rechterkolom: Acties en overzicht -->
+    <div class="side-wrapper">
+      <div class="container" id="buttonContainer">
+        <h2>Acties</h2>
+        <button onclick="confirmPurchase()">Bevestig aankoop</button>
+        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk aankopen (simpele weergave)</button>
+        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+      </div>
+
+      <div class="container" id="OverzichtContainer">
+        <h2>Overzicht</h2>
+        <div id="Overzicht"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal voor gedetailleerde aankopen -->
+  <div id="modal">
+    <div id="modalContent"></div>
+    <button onclick="closeModal()">Sluiten</button>
+  </div>
+  
+  <!-- Admin overzicht (volledig scherm) -->
+  <div class="container" id="adminView" style="display: none;">
+    <h1>Admin Overzicht</h1>
+    <div id="adminContent"></div>
+    <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
+    <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
+
+    <div class="admin-section">
+      <h2>Productbeheer</h2>
+      <button onclick="toggleProductManagement()">Producten beheren</button>
+      <div id="adminProductManagement" style="display: none;">
+        <input type="text" id="productName" placeholder="Productnaam" />
+        <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
+        <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
+        <div id="productList"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    /**********************
+     * NOTIFICATIE FUNCTIE
+     **********************/
+    function showNotification(message, type = "success") {
+      const notif = document.getElementById("notification");
+      notif.innerText = message;
+      notif.className = ""; // reset classes
+      notif.classList.add("show", type);
+      notif.style.display = "block";
+      setTimeout(() => {
+        notif.classList.remove("show");
+        notif.style.display = "none";
+      }, 3000);
+    }
+    
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+    
+    /**********************
+     * INITIALISATIE
+     **********************/
+    // Zorg dat productCategories als variabele staat (niet constant) zodat we deze kunnen aanpassen
+    let productCategories = [
+      { key: "snacks", label: "Snacks", defaultPrice: 0.50 },
+      { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75 },
+      { key: "drinken", label: "Drinken", defaultPrice: 0.80 },
+      { key: "overige", label: "Overige dranken", defaultPrice: 1.10 }
+    ];
+
+    let selectedCounts = {}; // Bijvoorbeeld: { snacks: 2, drinken: 1 }
+    
+    /**********************
+     * FUNCTIES VOOR DE SHOP
+     **********************/
+    function loadProducts() {
+      const container = document.getElementById("products");
+      container.innerHTML = "";
+      productCategories.forEach(category => {
+        let div = document.createElement("div");
+        div.className = "product";
+        div.dataset.key = category.key;
+        div.innerText = category.label;
+        
+        // Linkerklik: verhoog teller
+        div.addEventListener("click", function(e) {
+          let count = selectedCounts[category.key] || 0;
+          count++;
+          selectedCounts[category.key] = count;
+          div.innerText = category.label + (count > 1 ? " (" + count + ")" : "");
+          div.classList.add("selected");
+        });
+        
+        // Rechterklik: verlaag teller (en voorkom standaard contextmenu)
+        div.addEventListener("contextmenu", function(e) {
+          e.preventDefault();
+          let count = selectedCounts[category.key] || 0;
+          if (count > 0) {
+            count--;
+            if (count === 0) {
+              delete selectedCounts[category.key];
+              div.innerText = category.label;
+              div.classList.remove("selected");
+            } else {
+              selectedCounts[category.key] = count;
+              div.innerText = category.label + " (" + count + ")";
+            }
+          }
+        });
+        
+        container.appendChild(div);
+      });
+    }
+
+    function confirmPurchase() {
+      let username = document.getElementById("username").value.trim();
+      if (!username) {
+        showNotification("Vul je naam in!", "error");
+        return;
+      }
+      if (Object.keys(selectedCounts).length === 0) {
+        showNotification("Kies minstens één categorie!", "error");
+        return;
+      }
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[username]) {
+        purchases[username] = [];
+      }
+      for (let [catKey, count] of Object.entries(selectedCounts)) {
+        let category = productCategories.find(c => c.key === catKey);
+        for (let i = 0; i < count; i++) {
+          let purchase = { 
+            name: category.label, 
+            price: category.defaultPrice,
+            category: category.key,
+            timestamp: new Date().toISOString() 
+          };
+          purchases[username].push(purchase);
+        }
+      }
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateUsernames();
+      updateOverzicht();
+      showNotification(`${username}, je hebt je aankoop bevestigd.`, "success");
+      // Reset de selectie
+      selectedCounts = {};
+      document.querySelectorAll(".product").forEach(el => {
+        let key = el.dataset.key;
+        let cat = productCategories.find(c => c.key === key);
+        if (cat) {
+          el.innerText = cat.label;
+        }
+        el.classList.remove("selected");
+      });
+    }
+
+    function removePurchase() {
+      let username = document.getElementById("username").value.trim();
+      if (!username) {
+        showNotification("Vul je naam in om je aankopen te kunnen bekijken.", "error");
+        return;
+      }
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[username] || purchases[username].length === 0) {
+        showNotification("Je hebt nog geen aankopen om te verwijderen.", "error");
+        return;
+      }
+      let categoryCounts = {};
+      purchases[username].forEach(purchase => {
+        categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
+      });
+      let message = "Welke aankoop wil je verwijderen? Voer het nummer in:\n";
+      let categoryList = Object.keys(categoryCounts);
+      categoryList.forEach((catName, index) => {
+        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
+      });
+      let input = prompt(message);
+      let selectedIndex = parseInt(input) - 1;
+      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
+        showNotification("Ongeldige invoer.", "error");
+        return;
+      }
+      let selectedCategoryName = categoryList[selectedIndex];
+      let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
+      if (idx === -1) {
+        showNotification("Categorie niet gevonden.", "error");
+        return;
+      }
+      let removed = purchases[username].splice(idx, 1);
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateOverzicht();
+      showNotification(`Er is 1x ${removed[0].name} verwijderd.`, "success");
+    }
+
+    function showPurchases() {
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let message = "Overzicht van aankopen:\n\n";
+      for (let user in purchases) {
+        let total = purchases[user].reduce((sum, p) => sum + p.price, 0).toFixed(2);
+        message += `${user}: €${total}\n`;
+        purchases[user].forEach(p => {
+          message += ` - ${p.name} (€${p.price.toFixed(2)})\n`;
+        });
+        message += "\n";
+      }
+      // Vul de modal met de informatie en toon deze
+      document.getElementById("modalContent").innerHTML = `<pre>${message}</pre>`;
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function updateUsernames() {
+      let datalist = document.getElementById("usernames");
+      datalist.innerHTML = "";
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      for (let user in purchases) {
+        let option = document.createElement("option");
+        option.value = user;
+        datalist.appendChild(option);
+      }
+    }
+
+    function updateOverzicht() {
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let html = "<table>";
+      html += "<tr><th>Gebruiker</th><th>Snacks</th><th>Kinder Bueno</th><th>Drinken</th><th>Overige dranken</th></tr>";
+      for (let user in purchases) {
+        let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
+        purchases[user].forEach(purchase => {
+          if (purchase.category in counts) {
+            counts[purchase.category]++;
+          }
+        });
+        html += `<tr>
+          <td>${user}</td>
+          <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
+          <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
+          <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
+          <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
+        </tr>`;
+      }
+      html += "</table>";
+      document.getElementById("Overzicht").innerHTML = html;
+    }
+
+    function updateAdminContent() {
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let html = "<table>";
+      html += "<tr><th>Gebruiker</th><th>Totaal</th><th>Snacks</th><th>Kinder Bueno</th><th>Drinken</th><th>Overige dranken</th><th>Acties</th></tr>";
+      for (let user in purchases) {
+        let total = 0;
+        let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
+        purchases[user].forEach(purchase => {
+          total += purchase.price;
+          if (purchase.category in counts) {
+            counts[purchase.category]++;
+          }
+        });
+        html += `<tr>
+                  <td>${user}</td>
+                  <td>€${total.toFixed(2)}</td>
+                  <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
+                  <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
+                  <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
+                  <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
+                  <td><button onclick="removeUser('${user}')">Verwijder gebruiker</button></td>
+                 </tr>`;
+      }
+      html += "</table>";
+      document.getElementById("adminContent").innerHTML = html;
+    }
+
+    function removeUser(username) {
+      if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
+        let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+        delete purchases[username];
+        localStorage.setItem("purchases", JSON.stringify(purchases));
+        updateUsernames();
+        updateOverzicht();
+        updateAdminContent();
+        showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
+      }
+    }
+
+    function showAdminOverview() {
+      let code = prompt("Voer de admin code in:");
+      if (code !== "admin123") {
+        showNotification("Onjuiste code!", "error");
+        return;
+      }
+      document.getElementById("mainContainer").style.display = "none";
+      document.querySelector(".side-wrapper").style.display = "none";
+      document.getElementById("adminView").style.display = "block";
+      updateAdminContent();
+    }
+
+    function hideAdminOverview() {
+      document.getElementById("adminView").style.display = "none";
+      document.getElementById("mainContainer").style.display = "block";
+      document.querySelector(".side-wrapper").style.display = "flex";
+    }
+
+    function removeAllInfo() {
+      let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
+      if (confirmText === "VERWIJDER") {
+        localStorage.removeItem("purchases");
+        updateUsernames();
+        updateOverzicht();
+        updateAdminContent();
+        showNotification("Alle informatie is verwijderd.", "success");
+      } else {
+        showNotification("Verwijderen geannuleerd.", "error");
+      }
+    }
+
+    /**********************
+     * ADMIN: PRODUCTBEHEER
+     **********************/
+    // Variabele om bij te houden welk product bewerkt wordt (-1 betekent dat er geen bewerking gaande is)
+    let editingProductIndex = -1;
+
+    function toggleProductManagement() {
+      let container = document.getElementById("adminProductManagement");
+      container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
+      updateAdminProductList();
+    }
+
+    function updateAdminProductList() {
+      let container = document.getElementById("productList");
+      container.innerHTML = "";
+      productCategories.forEach((product, index) => {
+        let div = document.createElement("div");
+        div.innerHTML = `${product.label} - €${product.defaultPrice.toFixed(2)}
+          <button onclick="editProduct(${index})">Bewerk</button>
+          <button onclick="deleteProduct(${index})">Verwijder</button>`;
+        container.appendChild(div);
+      });
+    }
+
+    function editProduct(index) {
+      editingProductIndex = index;
+      const product = productCategories[index];
+      document.getElementById("productName").value = product.label;
+      document.getElementById("productPrice").value = product.defaultPrice;
+      document.getElementById("addProductButton").textContent = "Update product";
+    }
+
+    function addOrUpdateProduct() {
+      let nameInput = document.getElementById("productName");
+      let priceInput = document.getElementById("productPrice");
+      let name = nameInput.value.trim();
+      let price = parseFloat(priceInput.value);
+      if (!name || isNaN(price)) {
+        showNotification("Vul zowel een productnaam als een geldige prijs in.", "error");
+        return;
+      }
+      if (editingProductIndex === -1) {
+        // Voeg een nieuw product toe
+        productCategories.push({ 
+          key: name.toLowerCase().replace(/\s/g, ''), 
+          label: name, 
+          defaultPrice: price 
+        });
+        showNotification("Product toegevoegd.", "success");
+      } else {
+        // Werk een bestaand product bij
+        productCategories[editingProductIndex].label = name;
+        productCategories[editingProductIndex].defaultPrice = price;
+        productCategories[editingProductIndex].key = name.toLowerCase().replace(/\s/g, '');
+        showNotification("Product bijgewerkt.", "success");
+        editingProductIndex = -1;
+        document.getElementById("addProductButton").textContent = "Voeg product toe";
+      }
+      nameInput.value = "";
+      priceInput.value = "";
+      updateAdminProductList();
+      loadProducts();
+    }
+
+    function deleteProduct(index) {
+      if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
+        productCategories.splice(index, 1);
+        showNotification("Product verwijderd.", "success");
+        updateAdminProductList();
+        loadProducts();
+      }
+    }
+
+    /**********************
+     * INITIALE AANROEPEN
+     **********************/
+    loadProducts();
+    updateUsernames();
+    updateOverzicht();
+  </script>
+</body>
+</html>

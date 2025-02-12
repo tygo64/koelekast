@@ -193,7 +193,7 @@
   <div class="main-wrapper">
     <!-- Linkerkolom: Hoofdinterface voor categorie‑selectie -->
     <div id="mainContainer">
-      <h1>Koelkast Shop</h1>
+      <h1>Koelekast winkel</h1>
       <p>
         Voer je naam in en kies één of meerdere categorieën (klik meerdere keren voor meerdere stuks; rechtermuisklik om een klik ongedaan te maken):
       </p>
@@ -269,14 +269,18 @@
     /**********************
      * INITIALISATIE
      **********************/
-    // Zorg dat productCategories als variabele staat (niet constant) zodat we deze kunnen aanpassen
-    let productCategories = [
-      { key: "snacks", label: "Snacks", defaultPrice: 0.50 },
-      { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75 },
-      { key: "drinken", label: "Drinken", defaultPrice: 0.80 },
-      { key: "overige", label: "Overige dranken", defaultPrice: 1.10 }
-    ];
-
+    // Haal de productcategorieën uit localStorage (als deze al bestaan) of gebruik de standaardlijst
+    let productCategories = JSON.parse(localStorage.getItem("productCategories"));
+    if (!productCategories) {
+      productCategories = [
+        { key: "snacks", label: "Snacks", defaultPrice: 0.50 },
+        { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75 },
+        { key: "drinken", label: "Drinken", defaultPrice: 0.80 },
+        { key: "overige", label: "Overige dranken", defaultPrice: 1.10 }
+      ];
+      localStorage.setItem("productCategories", JSON.stringify(productCategories));
+    }
+    
     let selectedCounts = {}; // Bijvoorbeeld: { snacks: 2, drinken: 1 }
     
     /**********************
@@ -320,7 +324,7 @@
         container.appendChild(div);
       });
     }
-
+    
     function confirmPurchase() {
       let username = document.getElementById("username").value.trim();
       if (!username) {
@@ -362,7 +366,8 @@
         el.classList.remove("selected");
       });
     }
-
+    
+    // Functie voor de gebruiker (niet-admin) om één aankoop te verwijderen
     function removePurchase() {
       let username = document.getElementById("username").value.trim();
       if (!username) {
@@ -400,7 +405,58 @@
       updateOverzicht();
       showNotification(`Er is 1x ${removed[0].name} verwijderd.`, "success");
     }
-
+    
+    // Bestaande functie voor de admin: verwijder 1 aankoop van een gebruiker
+    function adminRemoveProduct(username) {
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[username] || purchases[username].length === 0) {
+        showNotification("Deze gebruiker heeft geen aankopen.", "error");
+        return;
+      }
+      let categoryCounts = {};
+      purchases[username].forEach(purchase => {
+        categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
+      });
+      let message = `Welke aankoop wil je verwijderen voor ${username}? Voer het nummer in:\n`;
+      let categoryList = Object.keys(categoryCounts);
+      categoryList.forEach((catName, index) => {
+        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
+      });
+      let input = prompt(message);
+      let selectedIndex = parseInt(input) - 1;
+      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
+        showNotification("Ongeldige invoer.", "error");
+        return;
+      }
+      let selectedCategoryName = categoryList[selectedIndex];
+      let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
+      if (idx === -1) {
+        showNotification("Categorie niet gevonden.", "error");
+        return;
+      }
+      let removed = purchases[username].splice(idx, 1);
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateOverzicht();
+      updateAdminContent();
+      showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${username}.`, "success");
+    }
+    
+    // Nieuwe functie voor de admin: verwijder ALLE aankopen van een gebruiker in één keer
+    function adminRemoveAllGoods(username) {
+      if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
+        let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+        if (!purchases[username] || purchases[username].length === 0) {
+          showNotification("Deze gebruiker heeft geen aankopen.", "error");
+          return;
+        }
+        purchases[username] = [];  // Leegmaken van de aankopen, maar de gebruiker blijft bestaan
+        localStorage.setItem("purchases", JSON.stringify(purchases));
+        updateOverzicht();
+        updateAdminContent();
+        showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
+      }
+    }
+    
     function showPurchases() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let message = "Overzicht van aankopen:\n\n";
@@ -416,7 +472,7 @@
       document.getElementById("modalContent").innerHTML = `<pre>${message}</pre>`;
       document.getElementById("modal").style.display = "block";
     }
-
+    
     function updateUsernames() {
       let datalist = document.getElementById("usernames");
       datalist.innerHTML = "";
@@ -427,11 +483,17 @@
         datalist.appendChild(option);
       }
     }
-
+    
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let html = "<table>";
-      html += "<tr><th>Gebruiker</th><th>Snacks</th><th>Kinder Bueno</th><th>Drinken</th><th>Overige dranken</th></tr>";
+      html += `<tr>
+                 <th>Gebruiker</th>
+                 <th>Snacks</th>
+                 <th>Kinder Bueno</th>
+                 <th>Drinken</th>
+                 <th>Overige dranken</th>
+               </tr>`;
       for (let user in purchases) {
         let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
         purchases[user].forEach(purchase => {
@@ -440,21 +502,29 @@
           }
         });
         html += `<tr>
-          <td>${user}</td>
-          <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
-          <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
-          <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
-          <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
-        </tr>`;
+                   <td>${user}</td>
+                   <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
+                   <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
+                   <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
+                   <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
+                 </tr>`;
       }
       html += "</table>";
       document.getElementById("Overzicht").innerHTML = html;
     }
-
+    
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let html = "<table>";
-      html += "<tr><th>Gebruiker</th><th>Totaal</th><th>Snacks</th><th>Kinder Bueno</th><th>Drinken</th><th>Overige dranken</th><th>Acties</th></tr>";
+      html += `<tr>
+                 <th>Gebruiker</th>
+                 <th>Totaal</th>
+                 <th>Snacks</th>
+                 <th>Kinder Bueno</th>
+                 <th>Drinken</th>
+                 <th>Overige dranken</th>
+                 <th>Acties</th>
+               </tr>`;
       for (let user in purchases) {
         let total = 0;
         let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
@@ -465,19 +535,23 @@
           }
         });
         html += `<tr>
-                  <td>${user}</td>
-                  <td>€${total.toFixed(2)}</td>
-                  <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
-                  <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
-                  <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
-                  <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
-                  <td><button onclick="removeUser('${user}')">Verwijder gebruiker</button></td>
+                   <td>${user}</td>
+                   <td>€${total.toFixed(2)}</td>
+                   <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
+                   <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
+                   <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
+                   <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
+                   <td>
+                     <button onclick="removeUser('${user}')">Verwijder gebruiker</button><br/>
+                     <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button>
+                   </td>
                  </tr>`;
       }
       html += "</table>";
       document.getElementById("adminContent").innerHTML = html;
     }
-
+    
+    // Verwijder de gebruiker (alle aankopen en de naam zelf worden verwijderd)
     function removeUser(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -489,7 +563,7 @@
         showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
       }
     }
-
+    
     function showAdminOverview() {
       let code = prompt("Voer de admin code in:");
       if (code !== "admin123") {
@@ -501,13 +575,13 @@
       document.getElementById("adminView").style.display = "block";
       updateAdminContent();
     }
-
+    
     function hideAdminOverview() {
       document.getElementById("adminView").style.display = "none";
       document.getElementById("mainContainer").style.display = "block";
       document.querySelector(".side-wrapper").style.display = "flex";
     }
-
+    
     function removeAllInfo() {
       let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
       if (confirmText === "VERWIJDER") {
@@ -520,19 +594,19 @@
         showNotification("Verwijderen geannuleerd.", "error");
       }
     }
-
+    
     /**********************
      * ADMIN: PRODUCTBEHEER
      **********************/
     // Variabele om bij te houden welk product bewerkt wordt (-1 betekent dat er geen bewerking gaande is)
     let editingProductIndex = -1;
-
+    
     function toggleProductManagement() {
       let container = document.getElementById("adminProductManagement");
       container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
       updateAdminProductList();
     }
-
+    
     function updateAdminProductList() {
       let container = document.getElementById("productList");
       container.innerHTML = "";
@@ -544,7 +618,7 @@
         container.appendChild(div);
       });
     }
-
+    
     function editProduct(index) {
       editingProductIndex = index;
       const product = productCategories[index];
@@ -552,7 +626,7 @@
       document.getElementById("productPrice").value = product.defaultPrice;
       document.getElementById("addProductButton").textContent = "Update product";
     }
-
+    
     function addOrUpdateProduct() {
       let nameInput = document.getElementById("productName");
       let priceInput = document.getElementById("productPrice");
@@ -581,19 +655,23 @@
       }
       nameInput.value = "";
       priceInput.value = "";
+      // Sla de gewijzigde productcategorieën op in localStorage
+      localStorage.setItem("productCategories", JSON.stringify(productCategories));
       updateAdminProductList();
       loadProducts();
     }
-
+    
     function deleteProduct(index) {
       if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
         productCategories.splice(index, 1);
         showNotification("Product verwijderd.", "success");
+        // Update de opgeslagen productcategorieën
+        localStorage.setItem("productCategories", JSON.stringify(productCategories));
         updateAdminProductList();
         loadProducts();
       }
     }
-
+    
     /**********************
      * INITIALE AANROEPEN
      **********************/

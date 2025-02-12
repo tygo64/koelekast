@@ -193,7 +193,7 @@
   <div class="main-wrapper">
     <!-- Linkerkolom: Hoofdinterface voor categorie‑selectie -->
     <div id="mainContainer">
-      <h1>Koelekast winkel</h1>
+      <h1>Koelkast Shop</h1>
       <p>
         Voer je naam in en kies één of meerdere categorieën (klik meerdere keren voor meerdere stuks; rechtermuisklik om een klik ongedaan te maken):
       </p>
@@ -484,67 +484,54 @@
       }
     }
     
+    // Overzichtstabel (niet-admin) wordt dynamisch opgebouwd op basis van de huidige productcategorieën
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let html = "<table>";
-      html += `<tr>
-                 <th>Gebruiker</th>
-                 <th>Snacks</th>
-                 <th>Kinder Bueno</th>
-                 <th>Drinken</th>
-                 <th>Overige dranken</th>
-               </tr>`;
+      // Header: eerste kolom is 'Gebruiker' en daarna per product
+      html += "<tr><th>Gebruiker</th>";
+      productCategories.forEach(product => {
+        html += `<th>${product.label}</th>`;
+      });
+      html += "</tr>";
+      
+      // Voor elke gebruiker: per product het aantal aankopen
       for (let user in purchases) {
-        let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
-        purchases[user].forEach(purchase => {
-          if (purchase.category in counts) {
-            counts[purchase.category]++;
-          }
+        html += `<tr><td>${user}</td>`;
+        productCategories.forEach(product => {
+          let count = purchases[user].filter(p => p.category === product.key).length;
+          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
-        html += `<tr>
-                   <td>${user}</td>
-                   <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
-                   <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
-                   <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
-                   <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
-                 </tr>`;
+        html += "</tr>";
       }
       html += "</table>";
       document.getElementById("Overzicht").innerHTML = html;
     }
     
+    // Admin-overzichttabel: dynamisch opgebouwd met per gebruiker per product en totaal
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let html = "<table>";
-      html += `<tr>
-                 <th>Gebruiker</th>
-                 <th>Totaal</th>
-                 <th>Snacks</th>
-                 <th>Kinder Bueno</th>
-                 <th>Drinken</th>
-                 <th>Overige dranken</th>
-                 <th>Acties</th>
-               </tr>`;
+      // Header: Gebruiker, per product, Totaal en Acties
+      html += "<tr><th>Gebruiker</th>";
+      productCategories.forEach(product => {
+        html += `<th>${product.label}</th>`;
+      });
+      html += "<th>Totaal</th><th>Acties</th></tr>";
+      
       for (let user in purchases) {
-        let total = 0;
-        let counts = { snacks: 0, kinderBueno: 0, drinken: 0, overige: 0 };
-        purchases[user].forEach(purchase => {
-          total += purchase.price;
-          if (purchase.category in counts) {
-            counts[purchase.category]++;
-          }
+        let total = purchases[user].reduce((sum, p) => sum + p.price, 0).toFixed(2);
+        html += `<tr><td>${user}</td>`;
+        productCategories.forEach(product => {
+          let count = purchases[user].filter(p => p.category === product.key).length;
+          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
-        html += `<tr>
-                   <td>${user}</td>
-                   <td>€${total.toFixed(2)}</td>
-                   <td>${counts.snacks > 0 ? 'Snacks x' + counts.snacks : '-'}</td>
-                   <td>${counts.kinderBueno > 0 ? 'Kinder Bueno x' + counts.kinderBueno : '-'}</td>
-                   <td>${counts.drinken > 0 ? 'Drinken x' + counts.drinken : '-'}</td>
-                   <td>${counts.overige > 0 ? 'Overige dranken x' + counts.overige : '-'}</td>
-                   <td>
-                     <button onclick="removeUser('${user}')">Verwijder gebruiker</button><br/>
-                     <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button>
-                   </td>
+        html += `<td>€${total}</td>
+                 <td>
+                   <button onclick="removeUser('${user}')">Verwijder gebruiker</button><br/>
+                   <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
+                   <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button>
+                 </td>
                  </tr>`;
       }
       html += "</table>";
@@ -659,6 +646,9 @@
       localStorage.setItem("productCategories", JSON.stringify(productCategories));
       updateAdminProductList();
       loadProducts();
+      // Update de overzichtstabellen zodat de nieuwe kolom zichtbaar is
+      updateOverzicht();
+      updateAdminContent();
     }
     
     function deleteProduct(index) {
@@ -669,6 +659,8 @@
         localStorage.setItem("productCategories", JSON.stringify(productCategories));
         updateAdminProductList();
         loadProducts();
+        updateOverzicht();
+        updateAdminContent();
       }
     }
     

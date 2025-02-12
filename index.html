@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inspector Gadget's Koelekast</title>
+  <title>Go Go Gadget</title>
   <!-- Speels lettertype -->
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -47,7 +47,7 @@
       max-width: 500px;
       width: 100%;
     }
-    /* Overzicht en Acties kunnen iets smaller */
+    /* Overzicht en Acties kunnen iets narrower */
     #OverzichtContainer, #buttonContainer {
       max-width: 400px;
       width: 100%;
@@ -178,8 +178,9 @@
       overflow-y: auto;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+    /* Zorg dat de sluitknop bovenaan komt */
     #modal button {
-      margin-top: 10px;
+      margin-bottom: 10px;
       width: auto;
     }
   </style>
@@ -219,10 +220,10 @@
     </div>
   </div>
   
-  <!-- Modal voor gedetailleerde aankopen -->
+  <!-- Modal voor gedetailleerde aankopen met de sluitknop bovenaan -->
   <div id="modal">
-    <div id="modalContent"></div>
     <button onclick="closeModal()">Sluiten</button>
+    <div id="modalContent"></div>
   </div>
   
   <!-- Admin overzicht (volledig scherm) -->
@@ -455,18 +456,29 @@
       }
     }
     
+    // Aangepaste functie: toon aankopen in de modal, gegroepeerd per product
     function showPurchases() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let message = "Overzicht van aankopen:\n\n";
       for (let user in purchases) {
-        let total = purchases[user].reduce((sum, p) => sum + p.price, 0).toFixed(2);
+        let userPurchases = purchases[user];
+        let total = userPurchases.reduce((sum, p) => sum + p.price, 0).toFixed(2);
         message += `${user}: €${total}\n`;
-        purchases[user].forEach(p => {
-          message += ` - ${p.name} (€${p.price.toFixed(2)})\n`;
+        // Groepeer de aankopen per product
+        let grouped = {};
+        userPurchases.forEach(p => {
+          if (!grouped[p.name]) {
+            grouped[p.name] = { count: 0, totalPrice: 0 };
+          }
+          grouped[p.name].count++;
+          grouped[p.name].totalPrice += p.price;
         });
+        for (let product in grouped) {
+          let { count, totalPrice } = grouped[product];
+          message += ` - ${product}${count > 1 ? " x" + count : ""} (€${totalPrice.toFixed(2)})\n`;
+        }
         message += "\n";
       }
-      // Vul de modal met de informatie en toon deze
       document.getElementById("modalContent").innerHTML = `<pre>${message}</pre>`;
       document.getElementById("modal").style.display = "block";
     }

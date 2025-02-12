@@ -273,10 +273,10 @@
     let productCategories = JSON.parse(localStorage.getItem("productCategories"));
     if (!productCategories) {
       productCategories = [
-        { key: "snacks", label: "Snacks", defaultPrice: 0.50 },
-        { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75 },
-        { key: "drinken", label: "Drinken", defaultPrice: 0.80 },
-        { key: "overige", label: "Overige dranken", defaultPrice: 1.10 }
+        { key: "€0.50 Snacks", label: "€0.50 Snacks", defaultPrice: 0.50 },
+        { key: "€0.75 Kinder Bueno", label: "€0.75 Kinder Bueno", defaultPrice: 0.75 },
+        { key: "€0.80 Drinken", label: "€0.80 Drinken", defaultPrice: 0.80 },
+        { key: "€1.10 Overige dranken", label: "€1.10 Overige dranken", defaultPrice: 1.10 }
       ];
       localStorage.setItem("productCategories", JSON.stringify(productCategories));
     }

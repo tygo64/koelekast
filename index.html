@@ -15,6 +15,7 @@
       padding: 20px;
       margin: 0;
     }
+    /* Hoofdcontainer met 3 kolommen naast elkaar */
     .main-wrapper {
       display: flex;
       justify-content: center;
@@ -27,32 +28,29 @@
         flex-direction: column;
         align-items: center;
       }
-      .side-wrapper {
+      /* Zorg dat containers op smalle schermen de volle breedte nemen */
+      #OverzichtContainer, #mainContainer, #buttonContainer {
+        max-width: 100%;
         width: 100%;
       }
     }
-    /* Linkerkolom: Hoofdinterface voor categorie‑selectie */
-    #mainContainer {
+    /* Containers styling */
+    #mainContainer,
+    #OverzichtContainer,
+    #buttonContainer {
       background: #fff;
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    #mainContainer {
       max-width: 500px;
       width: 100%;
     }
-    /* Rechterkolom: Acties en overzicht */
-    .side-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* Overzicht en Acties kunnen iets smaller */
+    #OverzichtContainer, #buttonContainer {
       max-width: 400px;
       width: 100%;
-    }
-    .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
     }
     h1, h2 {
       color: #ff6b81;
@@ -190,8 +188,15 @@
   <!-- Notificatie-element -->
   <div id="notification"></div>
 
+  <!-- Main wrapper met 3 kolommen: Overzicht, Hoofdinterface en Acties -->
   <div class="main-wrapper">
-    <!-- Linkerkolom: Hoofdinterface voor categorie‑selectie -->
+    <!-- Overzicht (linkerkant) -->
+    <div class="container" id="OverzichtContainer">
+      <h2>Overzicht</h2>
+      <div id="Overzicht"></div>
+    </div>
+
+    <!-- Hoofdinterface (midden) -->
     <div id="mainContainer">
       <h1>Inspector Gadget's Koelekast</h1>
       <p>
@@ -204,20 +209,13 @@
       <div id="products" style="display: flex; flex-wrap: wrap;"></div>
     </div>
 
-    <!-- Rechterkolom: Acties en overzicht -->
-    <div class="side-wrapper">
-      <div class="container" id="buttonContainer">
-        <h2>Acties</h2>
-        <button onclick="confirmPurchase()">Bevestig aankoop</button>
-        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk aankopen (simpele weergave)</button>
-        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
-      </div>
-
-      <div class="container" id="OverzichtContainer">
-        <h2>Overzicht</h2>
-        <div id="Overzicht"></div>
-      </div>
+    <!-- Acties (rechterkant) -->
+    <div class="container" id="buttonContainer">
+      <h2>Acties</h2>
+      <button onclick="confirmPurchase()">Bevestig aankoop</button>
+      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk aankopen (simpele weergave)</button>
+      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
     </div>
   </div>
   
@@ -569,7 +567,7 @@
         return;
       }
       document.getElementById("mainContainer").style.display = "none";
-      document.querySelector(".side-wrapper").style.display = "none";
+      document.querySelector(".main-wrapper").style.display = "none";
       document.getElementById("adminView").style.display = "block";
       updateAdminContent();
     }
@@ -577,7 +575,7 @@
     function hideAdminOverview() {
       document.getElementById("adminView").style.display = "none";
       document.getElementById("mainContainer").style.display = "block";
-      document.querySelector(".side-wrapper").style.display = "flex";
+      document.querySelector(".main-wrapper").style.display = "flex";
     }
     
     function removeAllInfo() {

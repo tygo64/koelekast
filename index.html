@@ -484,9 +484,15 @@
       }
     }
     
-    // Overzichtstabel (niet-admin) wordt dynamisch opgebouwd op basis van de huidige productcategorieën
+    // Overzichtstabel (niet-admin) met sortering: gebruiker met de meeste aankopen bovenaan
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let users = Object.keys(purchases).map(user => {
+        return { user, totalCount: purchases[user].length };
+      });
+      // Sorteer aflopend op totaal aantal aankopen
+      users.sort((a, b) => b.totalCount - a.totalCount);
+      
       let html = "<table>";
       // Header: eerste kolom is 'Gebruiker' en daarna per product
       html += "<tr><th>Gebruiker</th>";
@@ -495,22 +501,27 @@
       });
       html += "</tr>";
       
-      // Voor elke gebruiker: per product het aantal aankopen
-      for (let user in purchases) {
+      users.forEach(({user}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
           let count = purchases[user].filter(p => p.category === product.key).length;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
         html += "</tr>";
-      }
+      });
       html += "</table>";
       document.getElementById("Overzicht").innerHTML = html;
     }
     
-    // Admin-overzichttabel: dynamisch opgebouwd met per gebruiker per product en totaal
+    // Admin-overzichttabel met sortering: gebruiker met de meeste aankopen bovenaan
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let users = Object.keys(purchases).map(user => {
+        return { user, totalCount: purchases[user].length };
+      });
+      // Sorteer aflopend op totaal aantal aankopen
+      users.sort((a, b) => b.totalCount - a.totalCount);
+      
       let html = "<table>";
       // Header: Gebruiker, per product, Totaal en Acties
       html += "<tr><th>Gebruiker</th>";
@@ -519,7 +530,7 @@
       });
       html += "<th>Totaal</th><th>Acties</th></tr>";
       
-      for (let user in purchases) {
+      users.forEach(({user}) => {
         let total = purchases[user].reduce((sum, p) => sum + p.price, 0).toFixed(2);
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
@@ -533,7 +544,7 @@
                    <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button>
                  </td>
                  </tr>`;
-      }
+      });
       html += "</table>";
       document.getElementById("adminContent").innerHTML = html;
     }

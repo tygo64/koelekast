@@ -15,12 +15,21 @@
       padding: 20px;
       margin: 0;
     }
-    /* Hoofdcontainer met 3 kolommen naast elkaar */
+    /* Main wrapper met 3 kolommen: Overzicht, Hoofdinterface en een rechterkolom (Acties + Voorraad) */
     .main-wrapper {
       display: flex;
       justify-content: center;
       gap: 20px;
       align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    /* Rechterkolom: Acties en Voorraad gestapeld */
+    .side-right {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 400px;
+      width: 100%;
     }
     /* Bij kleinere schermen onder elkaar */
     @media (max-width: 768px) {
@@ -29,7 +38,7 @@
         align-items: center;
       }
       /* Zorg dat containers op smalle schermen de volle breedte nemen */
-      #OverzichtContainer, #mainContainer, #buttonContainer {
+      #OverzichtContainer, #mainContainer, .side-right {
         max-width: 100%;
         width: 100%;
       }
@@ -37,22 +46,24 @@
     /* Containers styling */
     #mainContainer,
     #OverzichtContainer,
-    #buttonContainer {
+    #buttonContainer,
+    #inventoryDisplayContainer {
       background: #fff;
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+      margin-bottom: 20px;
     }
     #mainContainer {
       max-width: 500px;
       width: 100%;
     }
-    /* Overzicht en Acties kunnen iets narrower */
-    #OverzichtContainer, #buttonContainer {
+    /* Overzicht kan iets smaller */
+    #OverzichtContainer {
       max-width: 400px;
       width: 100%;
     }
-    h1, h2 {
+    h1, h2, h3 {
       color: #ff6b81;
       margin-top: 0;
     }
@@ -162,7 +173,7 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
-    /* Modal styling voor showPurchases */
+    /* Modal styling voor het overzicht van recente aankopen */
     #modal {
       display: none;
       position: fixed;
@@ -189,7 +200,7 @@
   <!-- Notificatie-element -->
   <div id="notification"></div>
 
-  <!-- Main wrapper met 3 kolommen: Overzicht, Hoofdinterface en Acties -->
+  <!-- Main wrapper met 3 kolommen: Overzicht, Hoofdinterface en rechterkolom (Acties + Voorraad) -->
   <div class="main-wrapper">
     <!-- Overzicht (linkerkant) -->
     <div class="container" id="OverzichtContainer">
@@ -199,7 +210,7 @@
 
     <!-- Hoofdinterface (midden) -->
     <div id="mainContainer">
-      <h1>Inspector Gagdet's Koelekast</h1>
+      <h1>Inspector Gadget Koelekast</h1>
       <p>
         Voer je naam in en kies één of meerdere categorieën (klik meerdere keren voor meerdere stuks; rechtermuisklik om een klik ongedaan te maken):
       </p>
@@ -215,17 +226,25 @@
       <div id="products" style="display: flex; flex-wrap: wrap;"></div>
     </div>
 
-    <!-- Acties (rechterkant) -->
-    <div class="container" id="buttonContainer">
-      <h2>Acties</h2>
-      <button onclick="confirmPurchase()">Bevestig aankoop</button>
-      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk aankopen (simpele weergave)</button>
-      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+    <!-- Rechterkolom: Acties en Voorraad -->
+    <div class="side-right">
+      <!-- Acties -->
+      <div class="container" id="buttonContainer">
+        <h2>Acties</h2>
+        <button onclick="confirmPurchase()">Bevestig aankoop</button>
+        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+      </div>
+      <!-- Voorraad -->
+      <div class="container" id="inventoryDisplayContainer">
+        <h2>Voorraad</h2>
+        <div id="inventoryDisplay"></div>
+      </div>
     </div>
   </div>
   
-  <!-- Modal voor gedetailleerde aankopen met de sluitknop bovenaan -->
+  <!-- Modal voor het overzicht van recente aankopen -->
   <div id="modal">
     <button onclick="closeModal()">Sluiten</button>
     <div id="modalContent"></div>
@@ -248,6 +267,18 @@
         <div id="productList"></div>
       </div>
     </div>
+    
+    <!-- Voorraad Overzicht in admin paneel -->
+    <div class="admin-section">
+      <h2>Voorraad Overzicht</h2>
+      <div id="inventoryOverview"></div>
+      <h3>Voeg nieuw voorraad item toe</h3>
+      <label for="inventoryCategory">Categorie:</label>
+      <select id="inventoryCategory"></select>
+      <input type="text" id="inventoryItem" placeholder="Item naam" />
+      <button onclick="addInventoryItem()">Voeg item toe</button>
+    </div>
+    
   </div>
   
   <script>
@@ -257,7 +288,7 @@
     function showNotification(message, type = "success") {
       const notif = document.getElementById("notification");
       notif.innerText = message;
-      notif.className = ""; // reset classes
+      notif.className = "";
       notif.classList.add("show", type);
       notif.style.display = "block";
       setTimeout(() => {
@@ -273,7 +304,7 @@
     /**********************
      * INITIALISATIE
      **********************/
-    // Haal de productcategorieën uit localStorage (als deze al bestaan) of gebruik de standaardlijst
+    // Haal of initialiseer de productcategorieën in localStorage
     let productCategories = JSON.parse(localStorage.getItem("productCategories"));
     if (!productCategories) {
       productCategories = [
@@ -285,7 +316,19 @@
       localStorage.setItem("productCategories", JSON.stringify(productCategories));
     }
     
-    let selectedCounts = {}; // Bijvoorbeeld: { snacks: 2, drinken: 1 }
+    // Initialiseer de voorraad (inventory) met de gevraagde items
+    let inventory = JSON.parse(localStorage.getItem("inventory"));
+    if (!inventory) {
+      inventory = {
+        snacks: ["Lion", "Twix", "Mars", "Snickers", "Kitkat"],
+        drinken: ["Coca-Cola", "Coca-Cola Zero", "Coca-Cola Cherry", "Coca-Cola Vanille", "7UP"],
+        kinderBueno: ["Kinder Bueno"],
+        overige: ["Arizona", "Dr Pepper"]
+      };
+      localStorage.setItem("inventory", JSON.stringify(inventory));
+    }
+    
+    let selectedCounts = {};
     
     /**********************
      * FUNCTIES VOOR DE SHOP
@@ -308,7 +351,7 @@
           div.classList.add("selected");
         });
         
-        // Rechterklik: verlaag teller (en voorkom standaard contextmenu)
+        // Rechterklik: verlaag teller en voorkom contextmenu
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;
@@ -359,23 +402,20 @@
       updateUsernames();
       updateOverzicht();
       showNotification(`${username}, je hebt je aankoop bevestigd.`, "success");
-      // Reset de selectie
+      // Reset selectie
       selectedCounts = {};
       document.querySelectorAll(".product").forEach(el => {
         let key = el.dataset.key;
         let cat = productCategories.find(c => c.key === key);
-        if (cat) {
-          el.innerText = cat.label;
-        }
+        if (cat) { el.innerText = cat.label; }
         el.classList.remove("selected");
       });
     }
     
-    // Functie voor de gebruiker (niet-admin) om één aankoop te verwijderen
     function removePurchase() {
       let username = document.getElementById("username").value.trim();
       if (!username) {
-        showNotification("Vul je naam in om je aankopen te kunnen bekijken.", "error");
+        showNotification("Vul je naam in om je aankopen te bekijken.", "error");
         return;
       }
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -410,7 +450,6 @@
       showNotification(`Er is 1x ${removed[0].name} verwijderd.`, "success");
     }
     
-    // Bestaande functie voor de admin: verwijder 1 aankoop van een gebruiker
     function adminRemoveProduct(username) {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       if (!purchases[username] || purchases[username].length === 0) {
@@ -445,7 +484,6 @@
       showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${username}.`, "success");
     }
     
-    // Nieuwe functie voor de admin: verwijder ALLE aankopen van een gebruiker in één keer
     function adminRemoveAllGoods(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -453,7 +491,7 @@
           showNotification("Deze gebruiker heeft geen aankopen.", "error");
           return;
         }
-        purchases[username] = [];  // Leegmaken van de aankopen, maar de gebruiker blijft bestaan
+        purchases[username] = [];
         localStorage.setItem("purchases", JSON.stringify(purchases));
         updateOverzicht();
         updateAdminContent();
@@ -461,34 +499,30 @@
       }
     }
     
-    // Aangepaste functie: toon aankopen in de modal, gegroepeerd per product
+    // Toon alle aankopen, gesorteerd op timestamp (nieuwste bovenaan)
     function showPurchases() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let message = "Overzicht van aankopen:\n\n";
+      let allPurchases = [];
       for (let user in purchases) {
-        let userPurchases = purchases[user];
-        let total = userPurchases.reduce((sum, p) => sum + p.price, 0).toFixed(2);
-        message += `${user}: €${total}\n`;
-        // Groepeer de aankopen per product
-        let grouped = {};
-        userPurchases.forEach(p => {
-          if (!grouped[p.name]) {
-            grouped[p.name] = { count: 0, totalPrice: 0 };
-          }
-          grouped[p.name].count++;
-          grouped[p.name].totalPrice += p.price;
+        purchases[user].forEach(p => {
+          allPurchases.push({ ...p, user });
         });
-        for (let product in grouped) {
-          let { count, totalPrice } = grouped[product];
-          message += ` - ${product}${count > 1 ? " x" + count : ""} (€${totalPrice.toFixed(2)})\n`;
-        }
-        message += "\n";
       }
-      document.getElementById("modalContent").innerHTML = `<pre>${message}</pre>`;
+      allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
+      allPurchases.forEach(p => {
+        html += `<tr>
+                    <td>${new Date(p.timestamp).toLocaleString()}</td>
+                    <td>${p.user}</td>
+                    <td>${p.name}</td>
+                    <td>€${p.price.toFixed(2)}</td>
+                 </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("modalContent").innerHTML = html;
       document.getElementById("modal").style.display = "block";
     }
     
-    // Functie die zowel de datalist als de dropdown bijwerkt
     function updateUsernames() {
       let datalist = document.getElementById("usernames");
       let dropdown = document.getElementById("usernameDropdown");
@@ -508,26 +542,21 @@
       }
     }
     
-    // Functie om de gekozen naam uit de dropdown in het tekstveld te zetten
     function selectUsernameDropdown() {
       let dropdown = document.getElementById("usernameDropdown");
       let selectedValue = dropdown.value;
       document.getElementById("username").value = selectedValue;
     }
     
-    // Overzichtstabel (niet-admin) gesorteerd op totaal uitgegeven bedrag
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
-        // Bereken het totaalbedrag per gebruiker
         let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
         return { user, totalSpent };
       });
-      // Sorteer aflopend op totaal uitgegeven bedrag
       users.sort((a, b) => b.totalSpent - a.totalSpent);
       
       let html = "<table>";
-      // Header: Gebruiker, per product en totaal uitgegeven bedrag
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => {
         html += `<th>${product.label}</th>`;
@@ -547,18 +576,15 @@
       document.getElementById("Overzicht").innerHTML = html;
     }
     
-    // Admin-overzichttabel met sortering: gebruiker met het hoogste totaalbedrag
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
         let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
         return { user, totalSpent };
       });
-      // Sorteer aflopend op totaal uitgegeven bedrag
       users.sort((a, b) => b.totalSpent - a.totalSpent);
       
       let html = "<table>";
-      // Header: Gebruiker, per product, Totaal en Acties
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => {
         html += `<th>${product.label}</th>`;
@@ -583,7 +609,6 @@
       document.getElementById("adminContent").innerHTML = html;
     }
     
-    // Verwijder de gebruiker (alle aankopen en de naam zelf worden verwijderd)
     function removeUser(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -606,6 +631,7 @@
       document.querySelector(".main-wrapper").style.display = "none";
       document.getElementById("adminView").style.display = "block";
       updateAdminContent();
+      updateInventoryOverview();
     }
     
     function hideAdminOverview() {
@@ -630,7 +656,6 @@
     /**********************
      * ADMIN: PRODUCTBEHEER
      **********************/
-    // Variabele om bij te houden welk product bewerkt wordt (-1 betekent dat er geen bewerking gaande is)
     let editingProductIndex = -1;
     
     function toggleProductManagement() {
@@ -669,7 +694,6 @@
         return;
       }
       if (editingProductIndex === -1) {
-        // Voeg een nieuw product toe
         productCategories.push({ 
           key: name.toLowerCase().replace(/\s/g, ''), 
           label: name, 
@@ -677,7 +701,6 @@
         });
         showNotification("Product toegevoegd.", "success");
       } else {
-        // Werk een bestaand product bij
         productCategories[editingProductIndex].label = name;
         productCategories[editingProductIndex].defaultPrice = price;
         productCategories[editingProductIndex].key = name.toLowerCase().replace(/\s/g, '');
@@ -687,26 +710,107 @@
       }
       nameInput.value = "";
       priceInput.value = "";
-      // Sla de gewijzigde productcategorieën op in localStorage
       localStorage.setItem("productCategories", JSON.stringify(productCategories));
       updateAdminProductList();
       loadProducts();
-      // Update de overzichtstabellen zodat de nieuwe kolom zichtbaar is
       updateOverzicht();
       updateAdminContent();
+      updateInventoryDisplay();
     }
     
     function deleteProduct(index) {
       if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
         productCategories.splice(index, 1);
         showNotification("Product verwijderd.", "success");
-        // Update de opgeslagen productcategorieën
         localStorage.setItem("productCategories", JSON.stringify(productCategories));
         updateAdminProductList();
         loadProducts();
         updateOverzicht();
         updateAdminContent();
+        updateInventoryDisplay();
       }
+    }
+    
+    /**********************
+     * ADMIN: VOORRAAD OVERZICHT
+     **********************/
+    function updateInventoryOverview() {
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      let html = "<table><tr><th>Categorie</th><th>Voorraad</th><th>Acties</th></tr>";
+      productCategories.forEach(cat => {
+        let catKey = cat.key;
+        let items = (inventory[catKey] || []).join(", ");
+        html += `<tr>
+                    <td>${cat.label}</td>
+                    <td>${items || "Geen items"}</td>
+                    <td><button onclick="editInventoryCategory('${catKey}')">Bewerk</button></td>
+                 </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("inventoryOverview").innerHTML = html;
+      updateInventoryCategoryDropdown();
+    }
+    
+    function updateInventoryCategoryDropdown() {
+      let select = document.getElementById("inventoryCategory");
+      select.innerHTML = "";
+      productCategories.forEach(cat => {
+        let option = document.createElement("option");
+        option.value = cat.key;
+        option.text = cat.label;
+        select.appendChild(option);
+      });
+    }
+    
+    function editInventoryCategory(catKey) {
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      let currentItems = inventory[catKey] || [];
+      let newItems = prompt("Pas de voorraad aan (scheid items met een komma):", currentItems.join(", "));
+      if (newItems !== null) {
+        let updatedItems = newItems.split(",").map(item => item.trim()).filter(item => item !== "");
+        inventory[catKey] = updatedItems;
+        localStorage.setItem("inventory", JSON.stringify(inventory));
+        updateInventoryOverview();
+        updateInventoryDisplay();
+        showNotification("Voorraad bijgewerkt.", "success");
+      }
+    }
+    
+    function addInventoryItem() {
+      let category = document.getElementById("inventoryCategory").value;
+      let itemName = document.getElementById("inventoryItem").value.trim();
+      if (!itemName) {
+        showNotification("Voer een item naam in.", "error");
+        return;
+      }
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      if (!inventory[category]) {
+        inventory[category] = [];
+      }
+      inventory[category].push(itemName);
+      localStorage.setItem("inventory", JSON.stringify(inventory));
+      document.getElementById("inventoryItem").value = "";
+      updateInventoryOverview();
+      updateInventoryDisplay();
+      showNotification("Item toegevoegd.", "success");
+    }
+    
+    /**********************
+     * VOORRAAD WEERGAVE OP HOOFDSCHERM
+     **********************/
+    function updateInventoryDisplay() {
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
+      productCategories.forEach(cat => {
+        let catKey = cat.key;
+        let items = (inventory[catKey] || []).join(", ");
+        html += `<tr>
+                   <td>${cat.label}</td>
+                   <td>${items || "Geen items"}</td>
+                 </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("inventoryDisplay").innerHTML = html;
     }
     
     /**********************
@@ -715,6 +819,7 @@
     loadProducts();
     updateUsernames();
     updateOverzicht();
+    updateInventoryDisplay();
   </script>
 </body>
 </html>

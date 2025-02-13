@@ -199,13 +199,18 @@
 
     <!-- Hoofdinterface (midden) -->
     <div id="mainContainer">
-      <h1>Inspector Gadget's Koelekast</h1>
+      <h1>Inspector Gagdet's Koelekast</h1>
       <p>
         Voer je naam in en kies één of meerdere categorieën (klik meerdere keren voor meerdere stuks; rechtermuisklik om een klik ongedaan te maken):
       </p>
-      <!-- Datalist voor naamselectie -->
+      <!-- Invoer voor naam en datalist -->
       <input type="text" id="username" placeholder="Jouw naam" list="usernames" />
       <datalist id="usernames"></datalist>
+      <!-- Dropdown menu voor bestaande namen -->
+      <label for="usernameDropdown">Of kies een bestaande naam:</label>
+      <select id="usernameDropdown" onchange="selectUsernameDropdown()">
+        <option value="">Selecteer een naam</option>
+      </select>
       <!-- Container voor de vier categorie-knoppen -->
       <div id="products" style="display: flex; flex-wrap: wrap;"></div>
     </div>
@@ -483,54 +488,74 @@
       document.getElementById("modal").style.display = "block";
     }
     
+    // Functie die zowel de datalist als de dropdown bijwerkt
     function updateUsernames() {
       let datalist = document.getElementById("usernames");
+      let dropdown = document.getElementById("usernameDropdown");
       datalist.innerHTML = "";
+      dropdown.innerHTML = '<option value="">Selecteer een naam</option>';
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       for (let user in purchases) {
         let option = document.createElement("option");
         option.value = user;
+        option.text = user;
         datalist.appendChild(option);
+        
+        let dropdownOption = document.createElement("option");
+        dropdownOption.value = user;
+        dropdownOption.text = user;
+        dropdown.appendChild(dropdownOption);
       }
     }
     
-    // Overzichtstabel (niet-admin) met sortering: gebruiker met de meeste aankopen bovenaan
+    // Functie om de gekozen naam uit de dropdown in het tekstveld te zetten
+    function selectUsernameDropdown() {
+      let dropdown = document.getElementById("usernameDropdown");
+      let selectedValue = dropdown.value;
+      document.getElementById("username").value = selectedValue;
+    }
+    
+    // Overzichtstabel (niet-admin) gesorteerd op totaal uitgegeven bedrag
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
-        return { user, totalCount: purchases[user].length };
+        // Bereken het totaalbedrag per gebruiker
+        let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+        return { user, totalSpent };
       });
-      // Sorteer aflopend op totaal aantal aankopen
-      users.sort((a, b) => b.totalCount - a.totalCount);
+      // Sorteer aflopend op totaal uitgegeven bedrag
+      users.sort((a, b) => b.totalSpent - a.totalSpent);
       
       let html = "<table>";
-      // Header: eerste kolom is 'Gebruiker' en daarna per product
+      // Header: Gebruiker, per product en totaal uitgegeven bedrag
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => {
         html += `<th>${product.label}</th>`;
       });
-      html += "</tr>";
+      html += "<th>Totaal (€)</th></tr>";
       
-      users.forEach(({user}) => {
+      users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
           let count = purchases[user].filter(p => p.category === product.key).length;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
+        html += `<td>€${totalSpent.toFixed(2)}</td>`;
         html += "</tr>";
       });
       html += "</table>";
       document.getElementById("Overzicht").innerHTML = html;
     }
     
-    // Admin-overzichttabel met sortering: gebruiker met de meeste aankopen bovenaan
+    // Admin-overzichttabel met sortering: gebruiker met het hoogste totaalbedrag
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
-        return { user, totalCount: purchases[user].length };
+        let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+        return { user, totalSpent };
       });
-      // Sorteer aflopend op totaal aantal aankopen
-      users.sort((a, b) => b.totalCount - a.totalCount);
+      // Sorteer aflopend op totaal uitgegeven bedrag
+      users.sort((a, b) => b.totalSpent - a.totalSpent);
       
       let html = "<table>";
       // Header: Gebruiker, per product, Totaal en Acties
@@ -540,14 +565,13 @@
       });
       html += "<th>Totaal</th><th>Acties</th></tr>";
       
-      users.forEach(({user}) => {
-        let total = purchases[user].reduce((sum, p) => sum + p.price, 0).toFixed(2);
+      users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
           let count = purchases[user].filter(p => p.category === product.key).length;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
-        html += `<td>€${total}</td>
+        html += `<td>€${totalSpent.toFixed(2)}</td>
                  <td>
                    <button onclick="removeUser('${user}')">Verwijder gebruiker</button><br/>
                    <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>

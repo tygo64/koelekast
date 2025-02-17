@@ -16,17 +16,28 @@
       padding: 20px;
       margin: 0;
     }
+    /* Algemene styling voor de rijen */
     .row {
-      width: 100%;
-      margin-bottom: 20px;
       background: #fff;
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
     }
     h1, h2, h3 {
       color: #ff6b81;
       margin-top: 0;
+    }
+    /* Top container met drie kolommen naast elkaar */
+    #topContainer {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    #topContainer .col {
+      flex: 1;
+      min-width: 300px;
     }
     /* Producten: horizontale rij */
     #products {
@@ -140,19 +151,26 @@
   <!-- Notificatie -->
   <div id="notification"></div>
 
-  <!-- Overzicht & Voorraad -->
-  <div id="overzichtContainer" class="row">
-    <h2>Overzicht & Voorraad</h2>
-    <div id="Overzicht"></div>
+  <!-- Top container: Overzicht, Producten en Gebruikers Barcode Lijst naast elkaar -->
+  <div id="topContainer">
+    <!-- Overzicht & Voorraad -->
+    <div id="overzichtContainer" class="col row">
+      <h2>Overzicht & Voorraad</h2>
+      <div id="Overzicht"></div>
+    </div>
+    <!-- Producten -->
+    <div id="productContainer" class="col row">
+      <h2>Producten</h2>
+      <div id="products"></div>
+    </div>
+    <!-- Gebruikers Barcode Lijst -->
+    <div id="userBarcodeContainer" class="col row">
+      <h2>Gebruikers Barcode Lijst</h2>
+      <div id="userBarcodeList"></div>
+    </div>
   </div>
 
-  <!-- Producten (horizontaal) -->
-  <div id="productContainer" class="row">
-    <h2>Producten</h2>
-    <div id="products"></div>
-  </div>
-
-  <!-- Nieuwe gebruiker & Acties (onder de producten) -->
+  <!-- Onder de top container: Nieuwe gebruiker & Acties -->
   <div id="userActionsContainer" class="row">
     <h2>Nieuwe gebruiker & Acties</h2>
     <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
@@ -168,12 +186,6 @@
       <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
       <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
     </div>
-  </div>
-
-  <!-- Gebruikers Barcode Lijst -->
-  <div id="userBarcodeContainer" class="row">
-    <h2>Gebruikers Barcode Lijst</h2>
-    <div id="userBarcodeList"></div>
   </div>
 
   <!-- Modals -->
@@ -269,7 +281,7 @@
     }
     let currentUser = "";
 
-    // Maak barcode aan voor een nieuwe gebruiker bij blur
+    // Nieuwe gebruiker: maak barcode aan bij blur
     document.getElementById("username").addEventListener("blur", function() {
       let username = this.value.trim();
       if (username && !userBarcodes[username]) {
@@ -284,7 +296,7 @@
       }
     });
 
-    // Focus op barcodeInput als er buiten username geklikt wordt
+    // Focus op barcodeInput wanneer niet op username/barcodeInput wordt geklikt
     document.addEventListener("click", function(e) {
       if (e.target.id === "username" || e.target.id === "barcodeInput") return;
       document.getElementById("barcodeInput").focus();
@@ -307,7 +319,7 @@
         labelDiv.style.fontWeight = "bold";
         div.appendChild(labelDiv);
 
-        // SVG voor de productbarcode
+        // SVG voor productbarcode
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode-" + category.key;
         svg.style.display = "block";
@@ -323,7 +335,7 @@
           margin: 5 
         });
 
-        // Product wordt automatisch geselecteerd bij klik
+        // Klik: selecteer product (teller ophogen)
         div.addEventListener("click", function() {
           let count = selectedCounts[category.key] || 0;
           count = count ? count + 1 : 1;
@@ -332,7 +344,7 @@
           div.classList.add("selected");
         });
 
-        // Rechterklik: verlaag teller
+        // Rechterklik: teller verlagen
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;

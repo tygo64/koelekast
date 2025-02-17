@@ -279,7 +279,7 @@
         <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
         <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
         <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
-        <!-- Nieuwe knop in hoofdpaneel: verwijder barcode voor de huidige gebruiker -->
+        <!-- Extra knop in hoofdpaneel: verwijder barcode voor de huidige gebruiker -->
         <button onclick="removeCurrentUserBarcode()" style="background-color:#FFA500;">Verwijder barcode</button>
       </div>
       <div class="inventory">
@@ -475,7 +475,7 @@
       container.appendChild(confirmDiv);
     }
 
-    // Overzicht sorteren op totaal besteed (prijs)
+    // Overzicht sorteren op totaal besteed (prijs) en highlight de regel van de geselecteerde gebruiker
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       // Maak een array met alle gebruikers en bereken hun totaalbedrag
@@ -494,7 +494,9 @@
       html += "<th>Totaal (€)</th></tr>";
 
       usersArray.forEach(({user, totalSpent}) => {
-        html += `<tr><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
+        // Als de gebruiker de huidige is, geef de rij een groene achtergrond
+        let rowStyle = (user === currentUser) ? 'style="background-color: lightgreen;"' : "";
+        html += `<tr ${rowStyle}><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
         productCategories.forEach(product => {
           let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
@@ -542,7 +544,7 @@
       updateOverzicht();
       showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
 
-      // Reset selectie en zet de focus weer op het scanveld zodat je direct verder kunt scannen
+      // Reset de selectie en herstel de knoplabels
       selectedCounts = {};
       document.querySelectorAll(".product").forEach(el => {
         let key = el.dataset.key;
@@ -550,8 +552,11 @@
         if (cat) { el.firstChild.textContent = cat.label; }
         el.classList.remove("selected");
       });
+      // Wis de barcode input en zet focus erna met een korte vertraging
       document.getElementById("barcodeInput").value = "";
-      document.getElementById("barcodeInput").focus();
+      setTimeout(() => {
+        document.getElementById("barcodeInput").focus();
+      }, 50);
     }
 
     function handleBarcodeScan() {
@@ -567,6 +572,7 @@
         currentUser = foundUser;
         showNotification(`Gebruiker geselecteerd: ${foundUser}`, "success");
         document.getElementById("barcodeInput").value = "";
+        updateOverzicht(); // Update het overzicht zodat de rij groen wordt
         return;
       }
       
@@ -840,11 +846,9 @@
                  <td>
                    <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
                    <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button><br/>`;
-        // Als gebruiker geen aankopen heeft, geef dan een knop om de gebruiker volledig te verwijderen
         if(purchases[user].length === 0) {
           html += `<button onclick="removeUserCompletely('${user}')">Verwijder gebruiker</button><br/>`;
         }
-        // Knop om de gebruikersbarcode te verwijderen
         html += `<button onclick="removeUserBarcode('${user}')">Verwijder barcode</button>
                  </td>
                  </tr>`;
@@ -875,7 +879,6 @@
         showNotification(`Barcode van ${user} verwijderd.`, "success");
       }
     }
-    // Nieuwe functie: verwijder barcode voor de huidige gebruiker (in het hoofdpaneel)
     function removeCurrentUserBarcode() {
       if (!currentUser) {
         showNotification("Geen gebruiker geselecteerd.", "error");

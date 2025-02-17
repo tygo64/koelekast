@@ -279,6 +279,8 @@
         <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
         <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
         <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+        <!-- Nieuwe knop in hoofdpaneel: verwijder barcode voor de huidige gebruiker -->
+        <button onclick="removeCurrentUserBarcode()" style="background-color:#FFA500;">Verwijder barcode</button>
       </div>
       <div class="inventory">
         <h2>Voorraad</h2>
@@ -481,7 +483,7 @@
         let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
         return { user, totalSpent };
       });
-      // Sorteer op totaalbedrag (hoogste eerst)
+      // Sorteer op totaalbedrag (hoog naar laag)
       usersArray.sort((a, b) => b.totalSpent - a.totalSpent);
 
       let html = "<table>";
@@ -871,6 +873,24 @@
         updateUserBarcodeDisplay();
         updateAdminContent();
         showNotification(`Barcode van ${user} verwijderd.`, "success");
+      }
+    }
+    // Nieuwe functie: verwijder barcode voor de huidige gebruiker (in het hoofdpaneel)
+    function removeCurrentUserBarcode() {
+      if (!currentUser) {
+        showNotification("Geen gebruiker geselecteerd.", "error");
+        return;
+      }
+      if (!userBarcodes[currentUser]) {
+        showNotification("Deze gebruiker heeft geen barcode.", "error");
+        return;
+      }
+      if (confirm(`Weet je zeker dat je de barcode van ${currentUser} wilt verwijderen?`)) {
+        delete userBarcodes[currentUser];
+        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+        updateOverzicht();
+        updateUserBarcodeDisplay();
+        showNotification(`Barcode van ${currentUser} verwijderd.`, "success");
       }
     }
     function adminRemoveProduct(user) {

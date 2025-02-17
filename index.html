@@ -11,12 +11,12 @@
   <style>
     /* Algemene styling */
     body {
-      font-family: 'Comic Neue', cursive, sans-serif;
-      background: linear-gradient(to bottom right, #fceabb, #f8b500);
-      color: #333;
-      padding: 20px;
-      margin: 0;
-    }
+  font-family: 'Comic Neue', cursive, sans-serif;
+  background: linear-gradient(to bottom right, #fceabb, #f8b500);
+  color: #333;
+  padding: 20px;
+  margin: 0;
+}
 
     /* Notificatie styling */
     #notification {
@@ -45,17 +45,24 @@
 
     /* Grid container met 3 rijen en 4 kolommen */
     #grid-container {
-      display: grid;
-      grid-template-areas: 
-        "overview products products barcode"
-        ". actions newuser ."
-        ". inventory inventory .";
-      grid-template-columns: 1.5fr 1fr 1fr 1fr;  /* Overzicht krijgt iets meer breedte */
-      grid-template-rows: auto auto auto;
-      gap: 15px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+  display: grid;
+  grid-template-areas: 
+    "overview products products sidebar"
+    "overview products products sidebar";
+  grid-template-columns: 2fr 1fr 1fr 1fr; /* Sidebar is nu 1 kolom rechts */
+  gap: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Sidebar: Acties en Voorraad onder elkaar */
+.sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 
     /* Eerste rij */
     .overview {
@@ -259,6 +266,22 @@
         grid-template-rows: auto;
       }
     }
+
+    .overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.new-user-container {
+  display: flex;
+  gap: 10px;
+}
+
+.new-user-container input {
+  width: 150px; /* Beperkte breedte zodat het goed past */
+}
+    
   </style>
 </head>
 <body>
@@ -269,7 +292,13 @@
   <div id="grid-container">
     <!-- Rij 1 -->
     <div class="overview">
-      <h2>Overzicht</h2>
+      <div class="overview-header">
+        <h2>Overzicht</h2>
+        <div class="new-user-container">
+          <input type="text" id="newUserName" placeholder="Naam" />
+          <button onclick="addNewUserFromInput()">Toevoegen</button>
+        </div>
+      </div>
       <div id="Overzicht"></div>
     </div>
     <div class="categories">
@@ -282,35 +311,25 @@
       <!-- Producten komen in een aparte grid, zodat de titel en het scanveld boven blijven -->
       <div id="products" class="product-grid"></div>
     </div>
-    <div class="barcode-list">
-      <h2>Gebruikers Barcodes</h2>
-      <div id="userBarcodeListMain"></div>
-    </div>
     
-    <!-- Rij 2 -->
-    <div class="actions">
-      <h2>Acties</h2>
-      <div>
-        <p>Scan de onderstaande barcode om aankoop te bevestigen:</p>
-        <svg id="confirmBarcode" style="display: block; margin: auto;"></svg>
-      </div>
-      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-      <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
-      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+    <!-- Sidebar met Acties en Voorraad onder elkaar -->
+<div class="sidebar">
+  <div class="actions">
+    <h2>Acties</h2>
+    <div>
+      <p>Scan de onderstaande barcode om aankoop te bevestigen:</p>
     </div>
-    <div class="newuser">
-      <h2>Nieuwe gebruiker</h2>
-      <input type="text" id="newUserName" placeholder="Naam" />
-      <button onclick="addNewUserFromInput()">Toevoegen</button>
-    </div>
-    
-    <!-- Rij 3 -->
-    <div class="inventory">
-      <h2>Voorraad</h2>
-      <div id="inventoryDisplay"></div>
-    </div>
+    <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+    <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+    <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+    <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
   </div>
+
+  <div class="inventory">
+    <h2>Voorraad</h2>
+    <div id="inventoryDisplay"></div>
+  </div>
+</div>
 
   <!-- Modal voor recente aankopen -->
   <div id="modal">
@@ -422,108 +441,174 @@
     /**********************
      * Productcategorieën laden
      **********************/
-    function loadProducts() {
-      const container = document.getElementById("products");
-      container.innerHTML = "";
-      productCategories.forEach(category => {
-        let div = document.createElement("div");
-        div.className = "product";
-        div.dataset.key = category.key;
-        
-        // Label element
-        let label = document.createElement("div");
-        label.textContent = category.label;
-        div.appendChild(label);
-        
-        // SVG voor de productbarcode (kleiner gemaakt)
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "product-barcode-" + category.key;
-        svg.style.display = "block";
-        svg.style.margin = "5px auto 0";
-        div.appendChild(svg);
-        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
-        
-        // Klik-event: verhoog teller
-        div.addEventListener("click", function() {
-          let count = selectedCounts[category.key] || 0;
-          count++;
+     function loadProducts() {
+  const container = document.getElementById("products");
+  container.innerHTML = "";
+
+  // Voeg producten toe
+  productCategories.forEach(category => {
+    let div = document.createElement("div");
+    div.className = "product";
+    div.dataset.key = category.key;
+    
+    // Label element
+    let label = document.createElement("div");
+    label.textContent = category.label;
+    div.appendChild(label);
+    
+    // SVG voor de productbarcode
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "product-barcode-" + category.key;
+    svg.style.display = "block";
+    svg.style.margin = "5px auto 0";
+    div.appendChild(svg);
+    JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
+
+    // Klik-event: verhoog teller
+    div.addEventListener("click", function() {
+      let count = selectedCounts[category.key] || 0;
+      count++;
+      selectedCounts[category.key] = count;
+      label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
+      div.classList.add("selected");
+    });
+
+    // Rechterklik: verlaag teller
+    div.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+      let count = selectedCounts[category.key] || 0;
+      if (count > 0) {
+        count--;
+        if (count === 0) {
+          delete selectedCounts[category.key];
+          label.textContent = category.label;
+          div.classList.remove("selected");
+        } else {
           selectedCounts[category.key] = count;
-          label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
-          div.classList.add("selected");
-        });
-        // Rechterklik: verlaag teller
-        div.addEventListener("contextmenu", function(e) {
-          e.preventDefault();
-          let count = selectedCounts[category.key] || 0;
-          if (count > 0) {
-            count--;
-            if (count === 0) {
-              delete selectedCounts[category.key];
-              label.textContent = category.label;
-              div.classList.remove("selected");
-            } else {
-              selectedCounts[category.key] = count;
-              label.textContent = category.label + " (" + count + ")";
-            }
-          }
-        });
-        container.appendChild(div);
-      });
-    }
-
-    function updateOverzicht() {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let users = Object.keys(purchases).map(user => {
-        let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
-        return { user, totalSpent };
-      });
-      users.sort((a, b) => b.totalSpent - a.totalSpent);
-      
-      let html = "<table>";
-      html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
-      html += "<th>Totaal (€)</th></tr>";
-      
-      users.forEach(({user, totalSpent}) => {
-        html += `<tr><td>${user}</td>`;
-        productCategories.forEach(product => {
-          let count = purchases[user].filter(p => p.category === product.key).length;
-          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
-        });
-        html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
-      });
-      html += "</table>";
-      document.getElementById("Overzicht").innerHTML = html;
-    }
-
-    function confirmPurchase() {
-      if (!currentUser) { showNotification("Selecteer eerst een gebruiker.", "error"); return; }
-      if (Object.keys(selectedCounts).length === 0) { showNotification("Kies minstens één categorie!", "error"); return; }
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[currentUser]) { purchases[currentUser] = []; }
-      for (let [catKey, count] of Object.entries(selectedCounts)) {
-        let category = productCategories.find(c => c.key === catKey);
-        for (let i = 0; i < count; i++) {
-          let purchase = { 
-            name: category.label, 
-            price: category.defaultPrice,
-            category: category.key,
-            timestamp: new Date().toISOString() 
-          };
-          purchases[currentUser].push(purchase);
+          label.textContent = category.label + " (" + count + ")";
         }
       }
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateOverzicht();
-      showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
-      selectedCounts = {};
-      document.querySelectorAll(".product").forEach(el => {
-        let key = el.dataset.key;
-        let cat = productCategories.find(c => c.key === key);
-        if (cat) { el.firstChild.textContent = cat.label; }
-        el.classList.remove("selected");
-      });
+    });
+
+    container.appendChild(div);
+  });
+
+  // Voeg de aankoopbarcode toe als een apart product-item
+  let confirmDiv = document.createElement("div");
+  confirmDiv.className = "product";
+  confirmDiv.style.border = "2px solid red"; // Maak deze duidelijk zichtbaar
+  confirmDiv.style.backgroundColor = "#ffdddd";
+  confirmDiv.dataset.key = "confirmPurchase";
+
+  let confirmLabel = document.createElement("div");
+  confirmLabel.textContent = "Bevestig Aankoop";
+  confirmDiv.appendChild(confirmLabel);
+
+  // SVG voor de bevestigingsbarcode
+  let confirmSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  confirmSvg.id = "confirm-purchase-barcode";
+  confirmSvg.style.display = "block";
+  confirmSvg.style.margin = "5px auto 0";
+  confirmDiv.appendChild(confirmSvg);
+
+  JsBarcode(confirmSvg, confirmPurchaseBarcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+
+  // Klik-event voor aankoopbevestiging
+  confirmDiv.addEventListener("click", function() {
+    confirmPurchase();
+  });
+
+  container.appendChild(confirmDiv);
+}
+
+    function updateOverzicht() {
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  let users = Object.keys(purchases).map(user => {
+    let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+    return { user, totalSpent };
+  });
+  users.sort((a, b) => b.totalSpent - a.totalSpent);
+
+  let html = "<table>";
+  html += "<tr><th>Gebruiker</th><th>Barcode</th>";
+
+  productCategories.forEach(product => {
+    html += `<th>${product.label}</th>`;
+  });
+
+  html += "<th>Totaal (€)</th></tr>";
+
+  users.forEach(({ user, totalSpent }) => {
+    html += `<tr><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
+
+    productCategories.forEach(product => {
+      let count = purchases[user].filter(p => p.category === product.key).length;
+      html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
+    });
+
+    html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
+  });
+
+  html += "</table>";
+  document.getElementById("Overzicht").innerHTML = html;
+
+  // Voeg barcodes toe aan de tabel
+  users.forEach(({ user }) => {
+    let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
+    if (svg && userBarcodes[user]) {
+      JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
     }
+  });
+}
+
+
+function confirmPurchase() {
+  if (!currentUser) { 
+    showNotification("Selecteer eerst een gebruiker.", "error"); 
+    return; 
+  }
+  if (Object.keys(selectedCounts).length === 0) { 
+    showNotification("Kies minstens één categorie!", "error"); 
+    return; 
+  }
+
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  if (!purchases[currentUser]) { 
+    purchases[currentUser] = []; 
+  }
+
+  for (let [catKey, count] of Object.entries(selectedCounts)) {
+    let category = productCategories.find(c => c.key === catKey);
+    for (let i = 0; i < count; i++) {
+      let purchase = { 
+        name: category.label, 
+        price: category.defaultPrice,
+        category: category.key,
+        timestamp: new Date().toISOString() 
+      };
+      purchases[currentUser].push(purchase);
+    }
+  }
+
+  localStorage.setItem("purchases", JSON.stringify(purchases));
+  updateOverzicht();
+  showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
+
+  // Reset de geselecteerde producten
+  selectedCounts = {};
+  document.querySelectorAll(".product").forEach(el => {
+    let key = el.dataset.key;
+    let cat = productCategories.find(c => c.key === key);
+    if (cat) { el.firstChild.textContent = cat.label; }
+    el.classList.remove("selected");
+  });
+
+  // **Pagina automatisch verversen na aankoop**
+  setTimeout(() => {
+    location.reload();
+  }, 1000); // Wacht 1 seconde voor een betere gebruikerservaring
+}
+
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
@@ -609,22 +694,29 @@
     }
 
     function updateUserBarcodeDisplay() {
-      let container = document.getElementById("userBarcodeListMain");
-      container.innerHTML = "";
-      for (const [user, code] of Object.entries(userBarcodes)) {
-        let wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "user-barcode-" + user.replace(/\s/g, '');
-        wrapper.appendChild(svg);
-        let caption = document.createElement("div");
-        caption.textContent = user + " (Barcode: " + code + ")";
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        // Kleiner gemaakte barcode-instellingen voor gebruikers
-        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 1, height: 25 });
-      }
-    }
+  let container = document.getElementById("userBarcodeListMain");
+  container.innerHTML = ""; // Leeg de container eerst
+
+  for (const [user, code] of Object.entries(userBarcodes)) {
+    let wrapper = document.createElement("div");
+    wrapper.className = "barcode-item";
+
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "user-barcode-" + user.replace(/\s/g, '');
+
+    let caption = document.createElement("div");
+    caption.textContent = user;
+
+    wrapper.appendChild(svg);
+    wrapper.appendChild(caption);
+    container.appendChild(wrapper);
+
+    // Barcode genereren
+    JsBarcode(svg, code, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+  }
+}
+
+
 
     // Nieuwe gebruiker toevoegen
     function addNewUserFromInput() {
@@ -851,7 +943,6 @@
     window.addEventListener("load", () => {
       // Focus op barcode input
       document.getElementById("barcodeInput").focus();
-      JsBarcode("#confirmBarcode", confirmPurchaseBarcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
       loadProducts();
       updateOverzicht();
       updateInventoryDisplay();

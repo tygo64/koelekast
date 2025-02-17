@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Koelkast Shop</title>
   <!-- Speels lettertype -->
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <!-- JsBarcode Library voor barcode genereren -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
+    /* Algemene styling */
     body {
       font-family: 'Comic Neue', cursive, sans-serif;
       background: linear-gradient(to bottom right, #fceabb, #f8b500);
@@ -16,46 +17,126 @@
       padding: 20px;
       margin: 0;
     }
-    /* Algemene styling voor de rijen */
-    .row {
-      background: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
-      margin-bottom: 20px;
+
+    /* Notificatie styling */
+    #notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 1000;
+      display: none;
     }
+    #notification.show { opacity: 1; }
+    #notification.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #notification.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Grid container met 3 rijen en 4 kolommen */
+    #grid-container {
+      display: grid;
+      grid-template-areas: 
+        "overview products products barcode"
+        ". actions newuser ."
+        ". inventory inventory .";
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;  /* Overzicht krijgt iets meer breedte */
+      grid-template-rows: auto auto auto;
+      gap: 15px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Eerste rij */
+    .overview {
+      grid-area: overview;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      /* Geen overflow, dus geen scrollwheel */
+    }
+
+    /* In de categorieën-sectie blijft de titel bovenaan staan */
+    .categories {
+      grid-area: products;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    /* De producten worden in een aparte grid gezet */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      justify-items: center; /* Centreert de items horizontaal */
+      align-items: center;   /* Centreert de items verticaal */
+    }
+
+    .barcode-list {
+      grid-area: barcode;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+
+    /* Tweede rij */
+    .actions {
+      grid-area: actions;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .newuser {
+      grid-area: newuser;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-height: 150px;
+    }
+
+    /* Derde rij */
+    .inventory {
+      grid-area: inventory;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+
+    /* Koppen */
     h1, h2, h3 {
       color: #ff6b81;
       margin-top: 0;
     }
-    /* Top container met drie kolommen naast elkaar */
-    #topContainer {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    #topContainer .col {
-      flex: 1;
-      min-width: 300px;
-    }
-    /* Producten: horizontale rij */
-    #products {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
+
+    /* Productcategorie-knoppen (de individuele producten) */
     .product {
-      margin: 10px;
       padding: 15px;
       border: 2px solid #f8b500;
       font-size: 18px;
       cursor: pointer;
       background-color: #fff;
-      border-radius: 15px;
+      border-radius: 10px;
       transition: all 0.3s ease;
-      width: 150px;
+      width: 150px;  /* Vaste breedte zodat ze netjes in de grid passen */
       height: 150px;
       display: flex;
       flex-direction: column;
@@ -68,11 +149,13 @@
       background-color: #ffeaa7;
       transform: scale(1.05);
     }
+
+    /* Standaard knoppen */
     button {
-      margin-top: 20px;
-      padding: 15px;
-      font-size: 18px;
-      border-radius: 15px;
+      margin-top: 15px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 12px;
       border: none;
       background-color: #ff6b81;
       color: #fff;
@@ -90,12 +173,14 @@
     .delete-btn {
       background-color: #ff7979;
     }
+
+    /* Input & Select styling */
     input, select {
       width: 100%;
-      padding: 10px;
+      padding: 8px;
       margin: 10px 0;
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
       box-sizing: border-box;
     }
@@ -108,10 +193,12 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
+
+    /* Tabel styling */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 15px;
       font-size: 14px;
     }
     table, th, td {
@@ -125,6 +212,7 @@
       background-color: #ff6b81;
       color: #fff;
     }
+
     /* Modal styling */
     #modal, #barcodeModal {
       display: none;
@@ -133,7 +221,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: #fff;
-      padding: 20px;
+      padding: 15px;
       border: 1px solid #ccc;
       border-radius: 10px;
       z-index: 1001;
@@ -145,158 +233,143 @@
       margin-bottom: 10px;
       width: auto;
     }
-    /* Maak de gebruikerslijst scrollbaar */
-    #userBarcodeContainer {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    /* Actiescherm kleiner en links uitgelijnd */
-    #userActionsContainer {
-      max-width: 500px;
-      margin-left: 0;
-      text-align: left;
-    }
-    /* Styling voor de bevestigingsbarcode */
-    #confirmBarcodeContainer {
-      margin-bottom: 20px;
-      text-align: left;
+
+    /* Responsiviteit: herstructureren op kleinere schermen */
+    @media (max-width: 800px) {
+      #grid-container {
+        grid-template-areas:
+          "overview"
+          "products"
+          "barcode"
+          "actions"
+          "newuser"
+          "inventory";
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Notificatie -->
+  <!-- Notificatie-element -->
   <div id="notification"></div>
 
-  <!-- Top container: Overzicht, Producten en Gebruikers Barcode Lijst naast elkaar -->
-  <div id="topContainer">
-    <!-- Overzicht & Voorraad -->
-    <div id="overzichtContainer" class="col row">
-      <h2>Overzicht & Voorraad</h2>
+  <!-- Grid layout -->
+  <div id="grid-container">
+    <!-- Rij 1 -->
+    <div class="overview">
+      <h2>Overzicht</h2>
       <div id="Overzicht"></div>
     </div>
-    <!-- Producten -->
-    <div id="productContainer" class="col row">
-      <h2>Producten</h2>
-      <div id="products"></div>
+    <div class="categories">
+      <h2>Categorieën</h2>
+      <!-- Producten komen in een aparte grid, zodat de titel boven blijft -->
+      <div id="products" class="product-grid"></div>
     </div>
-    <!-- Gebruikers Barcode Lijst -->
-    <div id="userBarcodeContainer" class="col row">
-      <h2>Gebruikers Barcode Lijst</h2>
-      <div id="userBarcodeList"></div>
+    <div class="barcode-list">
+      <h2>Gebruikers Barcodes</h2>
+      <div id="userBarcodeListMain"></div>
     </div>
-  </div>
-
-  <!-- Onder de top container: Nieuwe gebruiker & Acties -->
-  <div id="userActionsContainer" class="row">
-    <h2>Nieuwe gebruiker & Acties</h2>
-    <!-- Gebruikersnaam invoer -->
-    <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
-    <datalist id="usernames"></datalist>
-
-    <!-- Bevestigingsbarcode: deze barcode wordt getoond zodat je hem kunt scannen om de aankoop te bevestigen -->
-    <div id="confirmBarcodeContainer">
-      <strong>Aankoop bevestigen:</strong>
-      <svg id="confirmBarcodeSVG" style="display:inline-block; vertical-align:middle; margin-left:10px;"></svg>
-    </div>
-
-    <!-- Barcode scanner (voor alle scans) -->
-    <div id="barcodeScannerContainer">
-      <label for="barcodeInput">Scan barcode:</label>
-      <input type="text" id="barcodeInput" placeholder="Scan hier barcode (druk op Enter)" autofocus />
-      <small>
-        Scan een productbarcode om het product te selecteren,<br/>
-        scan een gebruikersbarcode om de naam in te vullen,<br/>
-        of scan de bevestigingsbarcode hierboven om de aankoop te bevestigen.
-      </small>
-    </div>
-    <!-- Overige actieknoppen -->
-    <div id="buttonContainer">
+    
+    <!-- Rij 2 -->
+    <div class="actions">
+      <h2>Acties</h2>
+      <div>
+        <p>Scan de onderstaande barcode om aankoop te bevestigen:</p>
+        <svg id="confirmBarcode" style="display: block; margin: auto;"></svg>
+      </div>
       <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
       <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
       <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
       <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
     </div>
+    <div class="newuser">
+      <h2>Nieuwe gebruiker</h2>
+      <input type="text" id="newUserName" placeholder="Naam" />
+      <button onclick="addNewUserFromInput()">Toevoegen</button>
+    </div>
+    
+    <!-- Rij 3 -->
+    <div class="inventory">
+      <h2>Voorraad</h2>
+      <div id="inventoryDisplay"></div>
+    </div>
   </div>
 
-  <!-- Modals -->
+  <!-- Barcode Scanner invoerveld -->
+  <div style="max-width: 600px; margin: 20px auto;">
+    <label for="barcodeInput">Scan Barcode:</label>
+    <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus style="width:100%; padding:10px; font-size:16px;"/>
+  </div>
+
+  <!-- Modal voor recente aankopen -->
   <div id="modal">
     <button onclick="closeModal()">Sluiten</button>
     <div id="modalContent"></div>
   </div>
+
+  <!-- Modal voor Barcode Lijst -->
   <div id="barcodeModal">
     <button onclick="closeBarcodeModal()">Sluiten</button>
     <div id="barcodeListModal"></div>
   </div>
 
-  <!-- Admin Overzicht -->
-  <div id="adminView" class="row" style="display: none;">
+  <!-- Admin overzicht -->
+  <div id="adminView" class="container" style="display: none;">
     <h1>Admin Overzicht</h1>
     <div id="adminContent"></div>
     <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
     <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
     <div class="admin-section">
-      <h2>Gebruikers Barcode Lijst</h2>
-      <div id="userBarcodeListAdmin"></div>
-      <button onclick="exportUserBarcodes()">Exporteer User Barcodes</button>
-      <label for="importFile" style="display:block;margin-top:10px;">Importeer User Barcodes:</label>
-      <input type="file" id="importFile" onchange="importUserBarcodes(event)" />
+      <h2>Productbeheer</h2>
+      <button onclick="toggleProductManagement()">Producten beheren</button>
+      <div id="adminProductManagement" style="display: none;">
+        <!-- Nieuwe categorie toevoegen -->
+        <input type="text" id="productName" placeholder="Productnaam" />
+        <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
+        <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
+        <div id="productList"></div>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h2>Voorraad Overzicht</h2>
+      <div id="inventoryOverview"></div>
+      <h3>Voeg nieuw voorraad item toe</h3>
+      <label for="inventoryCategory">Categorie:</label>
+      <select id="inventoryCategory"></select>
+      <input type="text" id="inventoryItem" placeholder="Item naam" />
+      <button onclick="addInventoryItem()">Voeg item toe</button>
+    </div>
+    <div class="admin-section">
+      <h2>Product Barcode Lijst</h2>
+      <div id="barcodeList"></div>
+    </div>
+    <div class="admin-section">
+      <h2>User Barcode Lijst</h2>
+      <div id="userBarcodeList"></div>
     </div>
   </div>
 
+  <!-- JavaScript -->
   <script>
     /**********************
-     * CONSTANTEN & HELP FUNCTIES
+     * Global Variables & Initialisatie
      **********************/
-    // Speciale barcode voor aankoopbevestiging
-    const CONFIRM_BARCODE = "999999999999";
+    const confirmPurchaseBarcode = "000000000000"; // Barcode voor aankoopbevestiging
 
-    function showNotification(message, type = "success") {
-      const notif = document.getElementById("notification");
-      notif.innerText = message;
-      notif.className = "";
-      notif.classList.add("show", type);
-      notif.style.display = "block";
-      setTimeout(() => {
-        notif.style.display = "none";
-      }, 3000);
-    }
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
-    function closeBarcodeModal() {
-      document.getElementById("barcodeModal").style.display = "none";
+    // Productcategorieën
+    let productCategories = JSON.parse(localStorage.getItem("productCategories"));
+    if (!productCategories) {
+      productCategories = [
+        { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
+        { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
+        { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
+        { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
+      ];
+      localStorage.setItem("productCategories", JSON.stringify(productCategories));
     }
 
-    /**********************
-     * ADMIN MENU FUNCTIES
-     **********************/
-    function showAdminOverview() {
-      document.getElementById("adminView").style.display = "block";
-      updateAdminContent();
-    }
-    function hideAdminOverview() {
-      document.getElementById("adminView").style.display = "none";
-    }
-    function removeAllInfo() {
-      if (confirm("Weet je zeker dat je alle informatie wilt verwijderen?")) {
-        localStorage.clear();
-        location.reload();
-      }
-    }
-
-    /**********************
-     * PRODUCT- & BARCODE SETUP
-     **********************/
-    // Hardcoded productcategorieën
-    let productCategories = [
-      { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
-      { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
-      { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
-      { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
-    ];
-    localStorage.setItem("productCategories", JSON.stringify(productCategories));
-
-    // Inventory en userBarcodes
+    // Voorraad
     let inventory = JSON.parse(localStorage.getItem("inventory"));
     if (!inventory) {
       inventory = {
@@ -307,71 +380,38 @@
       };
       localStorage.setItem("inventory", JSON.stringify(inventory));
     }
+
+    // Gebruikers en hun barcodes
     let userBarcodes = JSON.parse(localStorage.getItem("userBarcodes"));
     if (!userBarcodes) {
       userBarcodes = {};
       localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
     }
+
     let currentUser = "";
-
-    /**********************
-     * Bevestigingsbarcode genereren
-     **********************/
-    function renderConfirmBarcode() {
-      JsBarcode(document.getElementById("confirmBarcodeSVG"), CONFIRM_BARCODE, { 
-        format: "CODE128", 
-        displayValue: true, 
-        width: 3, 
-        height: 60, 
-        margin: 5 
-      });
-    }
-    renderConfirmBarcode();
-
-    /**********************
-     * Barcode invoerveld (voor alle scans)
-     **********************/
-    document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        let code = this.value.trim();
-        processBarcode(code);
-        this.value = "";
-      }
-    });
-
-    // Verwerkt een gescande barcode
-    function processBarcode(code) {
-      // Check of het een productbarcode is
-      for (let category of productCategories) {
-        if (category.barcode === code) {
-          let productEl = document.getElementById("product-" + category.key);
-          if (productEl) {
-            productEl.click();
-            showNotification("Product " + category.label + " geselecteerd.", "success");
-            return;
-          }
-        }
-      }
-      // Check of de barcode overeenkomt met een gebruikersbarcode
-      for (let username in userBarcodes) {
-        if (userBarcodes[username] === code) {
-          document.getElementById("username").value = username;
-          showNotification("Gebruiker " + username + " geselecteerd.", "success");
-          return;
-        }
-      }
-      // Check of het de bevestigingsbarcode is
-      if (code === CONFIRM_BARCODE) {
-        confirmPurchase();
-        return;
-      }
-      showNotification("Barcode niet herkend.", "error");
-    }
-
-    /**********************
-     * Laad de producten en genereer duidelijke barcodes
-     **********************/
     let selectedCounts = {};
+
+    /**********************
+     * UI Update Functions
+     **********************/
+    function showNotification(message, type = "success") {
+      const notif = document.getElementById("notification");
+      notif.innerText = message;
+      notif.className = "";
+      notif.classList.add("show", type);
+      notif.style.display = "block";
+      setTimeout(() => {
+        notif.classList.remove("show");
+        notif.style.display = "none";
+      }, 3000);
+    }
+
+    function closeModal() { document.getElementById("modal").style.display = "none"; }
+    function closeBarcodeModal() { document.getElementById("barcodeModal").style.display = "none"; }
+
+    /**********************
+     * Productcategorieën laden
+     **********************/
     function loadProducts() {
       const container = document.getElementById("products");
       container.innerHTML = "";
@@ -379,41 +419,29 @@
         let div = document.createElement("div");
         div.className = "product";
         div.dataset.key = category.key;
-        // Uniek id voor simulatie via barcode scan
-        div.id = "product-" + category.key;
-
-        // Label
-        let labelDiv = document.createElement("div");
-        labelDiv.textContent = category.label;
-        labelDiv.style.fontWeight = "bold";
-        div.appendChild(labelDiv);
-
-        // SVG voor productbarcode
+        
+        // Label element
+        let label = document.createElement("div");
+        label.textContent = category.label;
+        div.appendChild(label);
+        
+        // SVG voor de productbarcode
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "barcode-" + category.key;
+        svg.id = "product-barcode-" + category.key;
         svg.style.display = "block";
-        svg.style.margin = "10px auto";
+        svg.style.margin = "5px auto 0";
         div.appendChild(svg);
-
-        // Genereer een duidelijke barcode
-        JsBarcode(svg, category.barcode, { 
-          format: "CODE128", 
-          displayValue: true, 
-          width: 3, 
-          height: 60, 
-          margin: 5 
-        });
-
-        // Klik (of barcode scannen): verhoog teller & selecteer product
+        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1.5, height: 30 });
+        
+        // Klik-event: verhoog teller
         div.addEventListener("click", function() {
           let count = selectedCounts[category.key] || 0;
-          count = count ? count + 1 : 1;
+          count++;
           selectedCounts[category.key] = count;
-          labelDiv.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
+          label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
           div.classList.add("selected");
         });
-
-        // Rechterklik verlaagt teller
+        // Rechterklik: verlaag teller
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;
@@ -421,143 +449,16 @@
             count--;
             if (count === 0) {
               delete selectedCounts[category.key];
-              labelDiv.textContent = category.label;
+              label.textContent = category.label;
               div.classList.remove("selected");
             } else {
               selectedCounts[category.key] = count;
-              labelDiv.textContent = category.label + " (" + count + ")";
+              label.textContent = category.label + " (" + count + ")";
             }
           }
         });
-
         container.appendChild(div);
       });
-    }
-
-    /**********************
-     * AANKOOP & OVERZICHT FUNCTIES
-     **********************/
-    function confirmPurchase() {
-      let username = document.getElementById("username").value.trim();
-      if (!username) {
-        showNotification("Vul je naam in!", "error");
-        return;
-      }
-      if (!userBarcodes[username]) {
-        let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-        userBarcodes[username] = newUserBarcode;
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateUserBarcodeList();
-        updateUserBarcodeListAdmin();
-      }
-      currentUser = username;
-      if (Object.keys(selectedCounts).length === 0) {
-        showNotification("Kies minstens één categorie!", "error");
-        return;
-      }
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[username]) {
-        purchases[username] = [];
-      }
-      for (let [catKey, count] of Object.entries(selectedCounts)) {
-        let category = productCategories.find(c => c.key === catKey);
-        for (let i = 0; i < count; i++) {
-          let purchase = { 
-            name: category.label, 
-            price: category.defaultPrice,
-            category: category.key,
-            timestamp: new Date().toISOString() 
-          };
-          purchases[username].push(purchase);
-        }
-      }
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateDatalist();
-      updateOverzicht();
-      showNotification(`${username}, je hebt je aankoop bevestigd.`, "success");
-      // Reset geselecteerde producten
-      selectedCounts = {};
-      document.querySelectorAll(".product").forEach(el => {
-        let key = el.dataset.key;
-        let cat = productCategories.find(c => c.key === key);
-        if (cat) {
-          let label = el.querySelector("div");
-          if (label) label.textContent = cat.label;
-        }
-        el.classList.remove("selected");
-      });
-    }
-
-    function removePurchase() {
-      let username = document.getElementById("username").value.trim();
-      if (!username) {
-        showNotification("Vul je naam in om je aankopen te bekijken.", "error");
-        return;
-      }
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[username] || purchases[username].length === 0) {
-        showNotification("Je hebt nog geen aankopen om te verwijderen.", "error");
-        return;
-      }
-      let categoryCounts = {};
-      purchases[username].forEach(purchase => {
-        categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
-      });
-      let message = "Welke aankoop wil je verwijderen? Voer het nummer in:\n";
-      let categoryList = Object.keys(categoryCounts);
-      categoryList.forEach((catName, index) => {
-        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
-      });
-      let input = prompt(message);
-      let selectedIndex = parseInt(input) - 1;
-      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
-        showNotification("Ongeldige invoer.", "error");
-        return;
-      }
-      let selectedCategoryName = categoryList[selectedIndex];
-      let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
-      if (idx === -1) {
-        showNotification("Categorie niet gevonden.", "error");
-        return;
-      }
-      let removed = purchases[username].splice(idx, 1);
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateOverzicht();
-      showNotification(`Er is 1x ${removed[0].name} verwijderd.`, "success");
-    }
-
-    function showPurchases() {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let allPurchases = [];
-      for (let user in purchases) {
-        purchases[user].forEach(p => {
-          allPurchases.push({ ...p, user });
-        });
-      }
-      allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
-      allPurchases.forEach(p => {
-        html += `<tr>
-                    <td>${new Date(p.timestamp).toLocaleString()}</td>
-                    <td>${p.user}</td>
-                    <td>${p.name}</td>
-                    <td>€${p.price.toFixed(2)}</td>
-                 </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("modalContent").innerHTML = html;
-      document.getElementById("modal").style.display = "block";
-    }
-
-    function updateDatalist() {
-      let datalist = document.getElementById("usernames");
-      datalist.innerHTML = "";
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      for (let user in purchases) {
-        let option = document.createElement("option");
-        option.value = user;
-        datalist.appendChild(option);
-      }
     }
 
     function updateOverzicht() {
@@ -567,42 +468,286 @@
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-
-      let html = "<h3>Top 5 Personen</h3>";
-      html += "<table>";
+      
+      let html = "<table>";
       html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => {
-        html += `<th>${product.label}</th>`;
-      });
+      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
       html += "<th>Totaal (€)</th></tr>";
-
-      users.slice(0, 5).forEach(({user, totalSpent}) => {
+      
+      users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
           let count = purchases[user].filter(p => p.category === product.key).length;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
         });
-        html += `<td>€${totalSpent.toFixed(2)}</td>`;
-        html += "</tr>";
+        html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
       });
       html += "</table>";
-
-      let inv = JSON.parse(localStorage.getItem("inventory"));
-      html += "<h3>Voorraad</h3>";
-      html += "<table>";
-      html += "<tr><th>Categorie</th><th>Items</th></tr>";
-      productCategories.forEach(cat => {
-        let items = (inv[cat.key] || []).join(", ");
-        html += `<tr><td>${cat.label}</td><td>${items || "Geen items"}</td></tr>`;
-      });
-      html += "</table>";
-
       document.getElementById("Overzicht").innerHTML = html;
     }
 
+    function confirmPurchase() {
+      if (!currentUser) { showNotification("Selecteer eerst een gebruiker.", "error"); return; }
+      if (Object.keys(selectedCounts).length === 0) { showNotification("Kies minstens één categorie!", "error"); return; }
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[currentUser]) { purchases[currentUser] = []; }
+      for (let [catKey, count] of Object.entries(selectedCounts)) {
+        let category = productCategories.find(c => c.key === catKey);
+        for (let i = 0; i < count; i++) {
+          let purchase = { 
+            name: category.label, 
+            price: category.defaultPrice,
+            category: category.key,
+            timestamp: new Date().toISOString() 
+          };
+          purchases[currentUser].push(purchase);
+        }
+      }
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateOverzicht();
+      showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
+      selectedCounts = {};
+      document.querySelectorAll(".product").forEach(el => {
+        let key = el.dataset.key;
+        let cat = productCategories.find(c => c.key === key);
+        if (cat) { el.firstChild.textContent = cat.label; }
+        el.classList.remove("selected");
+      });
+    }
+
+    function handleBarcodeScan() {
+      let scannedValue = document.getElementById("barcodeInput").value.trim();
+      if (!scannedValue) return;
+      
+      // Eerst: check of barcode bij een gebruiker hoort
+      let foundUser = null;
+      for (const [name, code] of Object.entries(userBarcodes)) {
+        if (code === scannedValue) { foundUser = name; break; }
+      }
+      if (foundUser) {
+        currentUser = foundUser;
+        showNotification(`Gebruiker geselecteerd: ${foundUser}`, "success");
+        document.getElementById("barcodeInput").value = "";
+        return;
+      }
+      
+      // Controleer of het de bevestigingsbarcode is
+      if (scannedValue === confirmPurchaseBarcode) {
+        if (!currentUser) { showNotification("Geen gebruiker geselecteerd.", "error"); }
+        else { confirmPurchase(); }
+        document.getElementById("barcodeInput").value = "";
+        return;
+      }
+      
+      // Check of barcode bij een productcategorie hoort
+      let product = productCategories.find(p => p.barcode === scannedValue);
+      if (product) {
+        let productDivs = document.querySelectorAll(".product");
+        productDivs.forEach(div => {
+          if (div.dataset.key === product.key) {
+            div.click();
+            showNotification(`${product.label} toegevoegd via barcode.`, "success");
+          }
+        });
+        document.getElementById("barcodeInput").value = "";
+        return;
+      }
+      
+      showNotification("Barcode niet herkend.", "error");
+      document.getElementById("barcodeInput").value = "";
+      document.getElementById("barcodeInput").focus();
+    }
+
+    document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") { handleBarcodeScan(); }
+    });
+
+    function showPurchases() {
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let allPurchases = [];
+      for (let user in purchases) {
+        purchases[user].forEach(p => { allPurchases.push({ ...p, user }); });
+      }
+      allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
+      allPurchases.forEach(p => {
+        html += `<tr>
+                  <td>${new Date(p.timestamp).toLocaleString()}</td>
+                  <td>${p.user}</td>
+                  <td>${p.name}</td>
+                  <td>€${p.price.toFixed(2)}</td>
+                </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("modalContent").innerHTML = html;
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function updateInventoryDisplay() {
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
+      productCategories.forEach(cat => {
+        let catKey = cat.key;
+        let items = (inventory[catKey] || []).join(", ");
+        html += `<tr>
+                  <td>${cat.label}</td>
+                  <td>${items || "Geen items"}</td>
+                </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("inventoryDisplay").innerHTML = html;
+    }
+
+    function updateUserBarcodeDisplay() {
+      let container = document.getElementById("userBarcodeListMain");
+      container.innerHTML = "";
+      for (const [user, code] of Object.entries(userBarcodes)) {
+        let wrapper = document.createElement("div");
+        wrapper.style.marginBottom = "20px";
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "user-barcode-" + user.replace(/\s/g, '');
+        wrapper.appendChild(svg);
+        let caption = document.createElement("div");
+        caption.textContent = user + " (Barcode: " + code + ")";
+        wrapper.appendChild(caption);
+        container.appendChild(wrapper);
+        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      }
+    }
+
+    // Nieuwe gebruiker toevoegen
+    function addNewUserFromInput() {
+      let newUser = document.getElementById("newUserName").value.trim();
+      if (!newUser) { showNotification("Voer een naam in voor de nieuwe klant.", "error"); return; }
+      if (userBarcodes[newUser]) { showNotification("Gebruiker bestaat al.", "error"); return; }
+      let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+      userBarcodes[newUser] = newUserBarcode;
+      localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+      currentUser = newUser;
+      showNotification(`Nieuwe gebruiker toegevoegd: ${newUser}`, "success");
+      document.getElementById("newUserName").value = "";
+      updateUserBarcodeDisplay();
+    }
+
     /**********************
-     * ADMIN FUNCTIES
+     * ADMIN: PRODUCTBEHEER
      **********************/
+    let editingProductIndex = -1;
+    function toggleProductManagement() {
+      let container = document.getElementById("adminProductManagement");
+      container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
+      updateAdminProductList();
+    }
+    function updateAdminProductList() {
+      let container = document.getElementById("productList");
+      container.innerHTML = "";
+      productCategories.forEach((product, index) => {
+        let div = document.createElement("div");
+        div.innerHTML = `${product.label} - €${product.defaultPrice.toFixed(2)} - Barcode: ${product.barcode}
+          <button onclick="editProduct(${index})">Bewerk</button>
+          <button onclick="deleteProduct(${index})">Verwijder</button>`;
+        container.appendChild(div);
+      });
+    }
+    function editProduct(index) {
+      editingProductIndex = index;
+      const product = productCategories[index];
+      document.getElementById("productName").value = product.label;
+      document.getElementById("productPrice").value = product.defaultPrice;
+      document.getElementById("addProductButton").textContent = "Update product";
+    }
+    function addOrUpdateProduct() {
+      let nameInput = document.getElementById("productName");
+      let priceInput = document.getElementById("productPrice");
+      let name = nameInput.value.trim();
+      let price = parseFloat(priceInput.value);
+      if (!name || isNaN(price)) {
+        showNotification("Vul zowel een productnaam als een geldige prijs in.", "error");
+        return;
+      }
+      if (editingProductIndex === -1) {
+        let newBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+        productCategories.push({ 
+          key: name.toLowerCase().replace(/\s/g, ''), 
+          label: name, 
+          defaultPrice: price,
+          barcode: newBarcode
+        });
+        showNotification("Product (categorie) toegevoegd.", "success");
+      } else {
+        let newKey = name.toLowerCase().replace(/\s/g, '');
+        productCategories[editingProductIndex].label = name;
+        productCategories[editingProductIndex].defaultPrice = price;
+        productCategories[editingProductIndex].key = newKey;
+        showNotification("Product (categorie) bijgewerkt.", "success");
+        editingProductIndex = -1;
+        document.getElementById("addProductButton").textContent = "Voeg product toe";
+      }
+      nameInput.value = "";
+      priceInput.value = "";
+      localStorage.setItem("productCategories", JSON.stringify(productCategories));
+      updateAdminProductList();
+      loadProducts();
+      updateOverzicht();
+      updateInventoryDisplay();
+    }
+    function deleteProduct(index) {
+      if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
+        productCategories.splice(index, 1);
+        showNotification("Product verwijderd.", "success");
+        localStorage.setItem("productCategories", JSON.stringify(productCategories));
+        updateAdminProductList();
+        loadProducts();
+        updateOverzicht();
+        updateInventoryDisplay();
+      }
+    }
+    function updateBarcodeListModal() {
+      let container = document.getElementById("barcodeListModal");
+      container.innerHTML = "";
+      productCategories.forEach(product => {
+        let wrapper = document.createElement("div");
+        wrapper.style.marginBottom = "20px";
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "barcode-modal-" + product.key;
+        wrapper.appendChild(svg);
+        let caption = document.createElement("div");
+        caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
+        wrapper.appendChild(caption);
+        container.appendChild(wrapper);
+        JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      });
+    }
+    function showBarcodeList() {
+      updateBarcodeListModal();
+      document.getElementById("barcodeModal").style.display = "block";
+      document.getElementById("barcodeModal").scrollTop = 0;
+    }
+    function showAdminOverview() {
+      let code = prompt("Voer de admin code in:");
+      if (code !== "admin123") {
+        showNotification("Onjuiste code!", "error");
+        return;
+      }
+      document.getElementById("grid-container").style.display = "none";
+      document.getElementById("adminView").style.display = "block";
+      updateAdminContent();
+    }
+    function hideAdminOverview() {
+      document.getElementById("adminView").style.display = "none";
+      document.getElementById("grid-container").style.display = "grid";
+    }
+    function removeAllInfo() {
+      let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
+      if (confirmText === "VERWIJDER") {
+        localStorage.removeItem("purchases");
+        updateOverzicht();
+        updateAdminContent();
+        showNotification("Alle informatie is verwijderd.", "success");
+      } else {
+        showNotification("Verwijderen geannuleerd.", "error");
+      }
+    }
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
@@ -610,14 +755,12 @@
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-
+      
       let html = "<table>";
       html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => {
-        html += `<th>${product.label}</th>`;
-      });
+      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
       html += "<th>Totaal</th><th>Acties</th></tr>";
-
+      
       users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
@@ -635,19 +778,16 @@
       html += "</table>";
       document.getElementById("adminContent").innerHTML = html;
     }
-
     function removeUser(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
         delete purchases[username];
         localStorage.setItem("purchases", JSON.stringify(purchases));
-        updateDatalist();
         updateOverzicht();
         updateAdminContent();
         showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
       }
     }
-
     function adminRemoveProduct(username) {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       if (!purchases[username] || purchases[username].length === 0) {
@@ -681,7 +821,6 @@
       updateAdminContent();
       showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${username}.`, "success");
     }
-
     function adminRemoveAllGoods(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -697,120 +836,15 @@
       }
     }
 
-    /**********************
-     * USER BARCODE MANAGEMENT (MET WEERGAVE ALS BARCODE)
-     **********************/
-    function updateUserBarcodeList() {
-      const container = document.getElementById("userBarcodeList");
-      container.innerHTML = "";
-      for (let username in userBarcodes) {
-        const div = document.createElement("div");
-        div.style.marginBottom = "15px";
-        const nameEl = document.createElement("strong");
-        nameEl.textContent = username + ": ";
-        div.appendChild(nameEl);
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.style.display = "inline-block";
-        svg.style.verticalAlign = "middle";
-        svg.style.marginRight = "10px";
-        JsBarcode(svg, userBarcodes[username], { 
-          format: "CODE128", 
-          displayValue: true, 
-          width: 2, 
-          height: 50, 
-          margin: 5 
-        });
-        div.appendChild(svg);
-        const btn = document.createElement("button");
-        btn.textContent = "Verwijder";
-        btn.style.marginLeft = "10px";
-        btn.onclick = function() {
-          delete userBarcodes[username];
-          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-          updateUserBarcodeList();
-          updateUserBarcodeListAdmin();
-          showNotification(`Barcode voor ${username} is verwijderd.`, "success");
-        };
-        div.appendChild(btn);
-        container.appendChild(div);
-      }
-    }
-
-    function updateUserBarcodeListAdmin() {
-      const container = document.getElementById("userBarcodeListAdmin");
-      container.innerHTML = "";
-      for (let username in userBarcodes) {
-        const div = document.createElement("div");
-        div.style.marginBottom = "15px";
-        const nameEl = document.createElement("strong");
-        nameEl.textContent = username + ": ";
-        div.appendChild(nameEl);
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.style.display = "inline-block";
-        svg.style.verticalAlign = "middle";
-        svg.style.marginRight = "10px";
-        JsBarcode(svg, userBarcodes[username], { 
-          format: "CODE128", 
-          displayValue: true, 
-          width: 2, 
-          height: 50, 
-          margin: 5 
-        });
-        div.appendChild(svg);
-        const btn = document.createElement("button");
-        btn.textContent = "Verwijder";
-        btn.style.marginLeft = "10px";
-        btn.onclick = function() {
-          delete userBarcodes[username];
-          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-          updateUserBarcodeList();
-          updateUserBarcodeListAdmin();
-          showNotification(`Barcode voor ${username} is verwijderd.`, "success");
-        };
-        div.appendChild(btn);
-        container.appendChild(div);
-      }
-    }
-
-    function exportUserBarcodes() {
-      const dataStr = JSON.stringify(userBarcodes, null, 2);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "userBarcodes.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function importUserBarcodes(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const importedData = JSON.parse(e.target.result);
-          Object.assign(userBarcodes, importedData);
-          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-          updateUserBarcodeList();
-          updateUserBarcodeListAdmin();
-          showNotification("User barcodes succesvol geïmporteerd.", "success");
-        } catch (err) {
-          showNotification("Fout bij het importeren van de data.", "error");
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    /**********************
-     * INITIAL LOAD
-     **********************/
-    loadProducts();
-    updateOverzicht();
-    updateDatalist();
-    updateUserBarcodeList();
-    updateUserBarcodeListAdmin();
+    window.addEventListener("load", () => {
+      // Focus op barcode input
+      document.getElementById("barcodeInput").focus();
+      JsBarcode("#confirmBarcode", confirmPurchaseBarcode, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      loadProducts();
+      updateOverzicht();
+      updateInventoryDisplay();
+      updateUserBarcodeDisplay();
+    });
   </script>
 </body>
 </html>

@@ -16,31 +16,24 @@
       padding: 20px;
       margin: 0;
     }
-    /* Container voor de vier horizontale secties */
-    .horizontal-container {
-      display: flex;
-      flex-direction: row;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .section {
+    /* Elke rij wordt een blok met volledige breedte */
+    .row {
+      width: 100%;
+      margin-bottom: 20px;
       background: #fff;
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
-      flex: 1;
-      min-width: 250px;
     }
     h1, h2, h3 {
       color: #ff6b81;
       margin-top: 0;
     }
-    /* Producten */
+    /* Producten styling */
     #products {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
     }
     .product {
       margin: 10px;
@@ -107,7 +100,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 20px;
       font-size: 14px;
     }
     table, th, td {
@@ -141,54 +134,48 @@
       margin-bottom: 10px;
       width: auto;
     }
-    /* Responsive: als scherm te smal, stapel dan verticaal */
-    @media (max-width: 768px) {
-      .horizontal-container {
-        flex-direction: column;
-      }
-    }
   </style>
 </head>
 <body>
-  <!-- Notificatie -->
+  <!-- Notificatie-element -->
   <div id="notification"></div>
-  
-  <!-- Hoofdcontainer met 4 horizontale secties -->
-  <div class="horizontal-container">
-    <!-- Sectie 1: Overzicht & Voorraad -->
-    <div id="section1" class="section">
-      <h2>Overzicht & Voorraad</h2>
-      <div id="Overzicht"></div>
+
+  <!-- Row 1: Overzicht en Voorraad -->
+  <div id="row1" class="row">
+    <h2>Overzicht & Voorraad</h2>
+    <div id="Overzicht"></div>
+  </div>
+
+  <!-- Row 2: Producten -->
+  <div id="row2" class="row">
+    <h2>Producten</h2>
+    <div id="products"></div>
+  </div>
+
+  <!-- Row 3: Nieuwe gebruiker & Acties -->
+  <div id="row3" class="row">
+    <h2>Nieuwe gebruiker & Acties</h2>
+    <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
+    <datalist id="usernames"></datalist>
+    <div id="barcodeScannerContainer">
+      <label for="barcodeInput">Scan Barcode:</label>
+      <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
     </div>
-    <!-- Sectie 2: Producten -->
-    <div id="section2" class="section">
-      <h2>Producten</h2>
-      <div id="products"></div>
-    </div>
-    <!-- Sectie 3: Nieuwe gebruiker & Acties -->
-    <div id="section3" class="section">
-      <h2>Nieuwe gebruiker & Acties</h2>
-      <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
-      <datalist id="usernames"></datalist>
-      <div id="barcodeScannerContainer">
-        <label for="barcodeInput">Scan Barcode:</label>
-        <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
-      </div>
-      <div id="buttonContainer">
-        <button onclick="confirmPurchase()">Bevestig aankoop</button>
-        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-        <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
-        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
-      </div>
-    </div>
-    <!-- Sectie 4: Gebruikers Barcode Lijst -->
-    <div id="section4" class="section">
-      <h2>Gebruikers Barcode Lijst</h2>
-      <div id="userBarcodeList"></div>
+    <div id="buttonContainer">
+      <button onclick="confirmPurchase()">Bevestig aankoop</button>
+      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+      <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
     </div>
   </div>
-  
+
+  <!-- Row 4: Lijst met gebruikersbarcodes -->
+  <div id="row4" class="row">
+    <h2>Gebruikers Barcode Lijst</h2>
+    <div id="userBarcodeList"></div>
+  </div>
+
   <!-- Modals -->
   <div id="modal">
     <button onclick="closeModal()">Sluiten</button>
@@ -198,46 +185,50 @@
     <button onclick="closeBarcodeModal()">Sluiten</button>
     <div id="barcodeListModal"></div>
   </div>
-  
+
   <!-- Admin overzicht (verborgen) -->
-  <div class="horizontal-container" id="adminView" style="display: none;">
-    <div class="section" style="flex: 1 1 100%;">
-      <h1>Admin Overzicht</h1>
-      <div id="adminContent"></div>
-      <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
-      <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
-      <div class="admin-section">
-        <h2>Productbeheer</h2>
-        <button onclick="toggleProductManagement()">Producten beheren</button>
-        <div id="adminProductManagement" style="display: none;">
-          <input type="text" id="productName" placeholder="Productnaam" />
-          <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
-          <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
-          <div id="productList"></div>
-        </div>
-      </div>
-      <div class="admin-section">
-        <h2>Voorraad Overzicht</h2>
-        <div id="inventoryOverview"></div>
-        <h3>Voeg nieuw voorraad item toe</h3>
-        <label for="inventoryCategory">Categorie:</label>
-        <select id="inventoryCategory"></select>
-        <input type="text" id="inventoryItem" placeholder="Item naam" />
-        <button onclick="addInventoryItem()">Voeg item toe</button>
-      </div>
-      <div class="admin-section">
-        <h2>Product Barcode Lijst</h2>
-        <div id="barcodeList"></div>
-      </div>
-      <div class="admin-section">
-        <h2>Gebruikers Barcode Lijst</h2>
-        <div id="userBarcodeListAdmin"></div>
+  <div class="row" id="adminView" style="display: none;">
+    <h1>Admin Overzicht</h1>
+    <div id="adminContent"></div>
+    <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
+    <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
+    <div class="admin-section">
+      <h2>Productbeheer</h2>
+      <button onclick="toggleProductManagement()">Producten beheren</button>
+      <div id="adminProductManagement" style="display: none;">
+        <input type="text" id="productName" placeholder="Productnaam" />
+        <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
+        <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
+        <div id="productList"></div>
       </div>
     </div>
+    <div class="admin-section">
+      <h2>Voorraad Overzicht</h2>
+      <div id="inventoryOverview"></div>
+      <h3>Voeg nieuw voorraad item toe</h3>
+      <label for="inventoryCategory">Categorie:</label>
+      <select id="inventoryCategory"></select>
+      <input type="text" id="inventoryItem" placeholder="Item naam" />
+      <button onclick="addInventoryItem()">Voeg item toe</button>
+    </div>
+    <div class="admin-section">
+      <h2>Product Barcode Lijst</h2>
+      <div id="barcodeList"></div>
+    </div>
+    <div class="admin-section">
+      <h2>Gebruikers Barcode Lijst</h2>
+      <div id="userBarcodeListAdmin"></div>
+      <!-- Export en import om data over browsers heen te gebruiken -->
+      <button onclick="exportUserBarcodes()">Exporteer User Barcodes</button>
+      <label for="importFile" style="display:block;margin-top:10px;">Importeer User Barcodes:</label>
+      <input type="file" id="importFile" onchange="importUserBarcodes(event)" />
+    </div>
   </div>
-  
+
   <script>
-    /* NOTIFICATIE FUNCTIE */
+    /**********************
+     * NOTIFICATIE FUNCTIE
+     **********************/
     function showNotification(message, type = "success") {
       const notif = document.getElementById("notification");
       notif.innerText = message;
@@ -249,10 +240,17 @@
         notif.style.display = "none";
       }, 3000);
     }
-    function closeModal() { document.getElementById("modal").style.display = "none"; }
-    function closeBarcodeModal() { document.getElementById("barcodeModal").style.display = "none"; }
     
-    /* INITIALISATIE */
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+    function closeBarcodeModal() {
+      document.getElementById("barcodeModal").style.display = "none";
+    }
+    
+    /**********************
+     * INITIALISATIE
+     **********************/
     let productCategories = JSON.parse(localStorage.getItem("productCategories"));
     if (!productCategories) {
       productCategories = [
@@ -286,13 +284,16 @@
     document.getElementById("username").addEventListener("blur", function() {
       let username = this.value.trim();
       if (username && !userBarcodes[username]) {
+        // Maak een nieuwe user barcode aan
         let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         userBarcodes[username] = newUserBarcode;
         localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
         updateUserBarcodeList();
         updateUserBarcodeListAdmin();
       }
-      if (username) currentUser = username;
+      if (username) {
+        currentUser = username;
+      }
     });
     
     // Focus op barcodeInput tenzij op username geklikt
@@ -303,7 +304,9 @@
     
     let selectedCounts = {};
     
-    /* PRODUCTEN MET BARCODE IN BOXEN */
+    /**********************
+     * PRODUCTEN MET BARCODE IN BOXEN
+     **********************/
     function loadProducts() {
       const container = document.getElementById("products");
       container.innerHTML = "";
@@ -311,19 +314,23 @@
         let div = document.createElement("div");
         div.className = "product";
         div.dataset.key = category.key;
+        
         // Label
         let labelDiv = document.createElement("div");
         labelDiv.textContent = category.label;
         labelDiv.style.fontWeight = "bold";
         div.appendChild(labelDiv);
+        
         // SVG voor barcode
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode-" + category.key;
         svg.style.display = "block";
         svg.style.margin = "10px auto";
         div.appendChild(svg);
+        
         // Barcode genereren
         JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+        
         // Linkerklik: verhoog teller
         div.addEventListener("click", function(e) {
           let count = selectedCounts[category.key] || 0;
@@ -332,7 +339,8 @@
           labelDiv.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
           div.classList.add("selected");
         });
-        // Rechterklik: verlaag teller
+        
+        // Rechterklik: verlaag teller en voorkom contextmenu
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;
@@ -348,14 +356,20 @@
             }
           }
         });
+        
         container.appendChild(div);
       });
     }
     
-    /* AANKOOPEN & OVERZICHT */
+    /**********************
+     * AANKOOPEN & OVERZICHT
+     **********************/
     function confirmPurchase() {
       let username = document.getElementById("username").value.trim();
-      if (!username) { showNotification("Vul je naam in!", "error"); return; }
+      if (!username) {
+        showNotification("Vul je naam in!", "error");
+        return;
+      }
       if (!userBarcodes[username]) {
         let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         userBarcodes[username] = newUserBarcode;
@@ -364,9 +378,15 @@
         updateUserBarcodeListAdmin();
       }
       currentUser = username;
-      if (Object.keys(selectedCounts).length === 0) { showNotification("Kies minstens één categorie!", "error"); return; }
+      
+      if (Object.keys(selectedCounts).length === 0) {
+        showNotification("Kies minstens één categorie!", "error");
+        return;
+      }
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[username]) purchases[username] = [];
+      if (!purchases[username]) {
+        purchases[username] = [];
+      }
       for (let [catKey, count] of Object.entries(selectedCounts)) {
         let category = productCategories.find(c => c.key === catKey);
         for (let i = 0; i < count; i++) {
@@ -397,22 +417,36 @@
     
     function removePurchase() {
       let username = document.getElementById("username").value.trim();
-      if (!username) { showNotification("Vul je naam in om je aankopen te bekijken.", "error"); return; }
+      if (!username) {
+        showNotification("Vul je naam in om je aankopen te bekijken.", "error");
+        return;
+      }
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[username] || purchases[username].length === 0) { showNotification("Je hebt nog geen aankopen om te verwijderen.", "error"); return; }
+      if (!purchases[username] || purchases[username].length === 0) {
+        showNotification("Je hebt nog geen aankopen om te verwijderen.", "error");
+        return;
+      }
       let categoryCounts = {};
       purchases[username].forEach(purchase => {
         categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
       });
       let message = "Welke aankoop wil je verwijderen? Voer het nummer in:\n";
       let categoryList = Object.keys(categoryCounts);
-      categoryList.forEach((catName, index) => { message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`; });
+      categoryList.forEach((catName, index) => {
+        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
+      });
       let input = prompt(message);
       let selectedIndex = parseInt(input) - 1;
-      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) { showNotification("Ongeldige invoer.", "error"); return; }
+      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
+        showNotification("Ongeldige invoer.", "error");
+        return;
+      }
       let selectedCategoryName = categoryList[selectedIndex];
       let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
-      if (idx === -1) { showNotification("Categorie niet gevonden.", "error"); return; }
+      if (idx === -1) {
+        showNotification("Categorie niet gevonden.", "error");
+        return;
+      }
       let removed = purchases[username].splice(idx, 1);
       localStorage.setItem("purchases", JSON.stringify(purchases));
       updateOverzicht();
@@ -423,7 +457,9 @@
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let allPurchases = [];
       for (let user in purchases) {
-        purchases[user].forEach(p => { allPurchases.push({ ...p, user }); });
+        purchases[user].forEach(p => {
+          allPurchases.push({ ...p, user });
+        });
       }
       allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
@@ -451,7 +487,7 @@
       }
     }
     
-    // OVERZICHT: Toon maximaal 5 personen en voorraad
+    // OVERZICHT: Toon maximaal 5 personen en de voorraad
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
@@ -463,7 +499,9 @@
       let html = "<h3>Top 5 Personen</h3>";
       html += "<table>";
       html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
+      productCategories.forEach(product => {
+        html += `<th>${product.label}</th>`;
+      });
       html += "<th>Totaal (€)</th></tr>";
       
       users.slice(0, 5).forEach(({user, totalSpent}) => {
@@ -477,7 +515,7 @@
       });
       html += "</table>";
       
-      // Voeg voorraad toe
+      // Voeg de voorraad toe onder het overzicht
       let inv = JSON.parse(localStorage.getItem("inventory"));
       html += "<h3>Voorraad</h3>";
       html += "<table>";
@@ -492,7 +530,9 @@
       document.getElementById("Overzicht").innerHTML = html;
     }
     
-    /* ADMIN FUNCTIES */
+    /**********************
+     * ADMIN FUNCTIES
+     **********************/
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
@@ -503,7 +543,9 @@
       
       let html = "<table>";
       html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
+      productCategories.forEach(product => {
+        html += `<th>${product.label}</th>`;
+      });
       html += "<th>Totaal</th><th>Acties</th></tr>";
       
       users.forEach(({user, totalSpent}) => {
@@ -548,7 +590,9 @@
       });
       let message = `Welke aankoop wil je verwijderen voor ${username}? Voer het nummer in:\n`;
       let categoryList = Object.keys(categoryCounts);
-      categoryList.forEach((catName, index) => { message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`; });
+      categoryList.forEach((catName, index) => {
+        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
+      });
       let input = prompt(message);
       let selectedIndex = parseInt(input) - 1;
       if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
@@ -557,7 +601,10 @@
       }
       let selectedCategoryName = categoryList[selectedIndex];
       let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
-      if (idx === -1) { showNotification("Categorie niet gevonden.", "error"); return; }
+      if (idx === -1) {
+        showNotification("Categorie niet gevonden.", "error");
+        return;
+      }
       let removed = purchases[username].splice(idx, 1);
       localStorage.setItem("purchases", JSON.stringify(purchases));
       updateOverzicht();
@@ -580,285 +627,83 @@
       }
     }
     
-    function showAdminOverview() {
-      let code = prompt("Voer de admin code in:");
-      if (code !== "admin123") { showNotification("Onjuiste code!", "error"); return; }
-      // Verberg de horizontale container en toon de admin view
-      document.querySelector(".horizontal-container").style.display = "none";
-      document.getElementById("adminView").style.display = "flex";
-      updateAdminContent();
-      updateInventoryOverview();
-      updateBarcodeList();
-      updateUserBarcodeListAdmin();
-    }
-    
-    function hideAdminOverview() {
-      document.getElementById("adminView").style.display = "none";
-      document.querySelector(".horizontal-container").style.display = "flex";
-    }
-    
-    function removeAllInfo() {
-      let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
-      if (confirmText === "VERWIJDER") {
-        localStorage.removeItem("purchases");
-        updateDatalist();
-        updateOverzicht();
-        updateAdminContent();
-        showNotification("Alle informatie is verwijderd.", "success");
-      } else {
-        showNotification("Verwijderen geannuleerd.", "error");
-      }
-    }
-    
-    /* ADMIN: PRODUCTBEHEER */
-    let editingProductIndex = -1;
-    function toggleProductManagement() {
-      let container = document.getElementById("adminProductManagement");
-      container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
-      updateAdminProductList();
-    }
-    function updateAdminProductList() {
-      let container = document.getElementById("productList");
-      container.innerHTML = "";
-      productCategories.forEach((product, index) => {
-        let div = document.createElement("div");
-        div.innerHTML = `${product.label} - €${product.defaultPrice.toFixed(2)} - Barcode: ${product.barcode}
-          <button onclick="editProduct(${index})">Bewerk</button>
-          <button onclick="deleteProduct(${index})">Verwijder</button>`;
-        container.appendChild(div);
-      });
-    }
-    function editProduct(index) {
-      editingProductIndex = index;
-      const product = productCategories[index];
-      document.getElementById("productName").value = product.label;
-      document.getElementById("productPrice").value = product.defaultPrice;
-      document.getElementById("addProductButton").textContent = "Update product";
-    }
-    function addOrUpdateProduct() {
-      let nameInput = document.getElementById("productName");
-      let priceInput = document.getElementById("productPrice");
-      let name = nameInput.value.trim();
-      let price = parseFloat(priceInput.value);
-      if (!name || isNaN(price)) { showNotification("Vul zowel een productnaam als een geldige prijs in.", "error"); return; }
-      if (editingProductIndex === -1) {
-        let newBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-        productCategories.push({ 
-          key: name.toLowerCase().replace(/\s/g, ''), 
-          label: name, 
-          defaultPrice: price,
-          barcode: newBarcode
-        });
-        showNotification("Product toegevoegd.", "success");
-      } else {
-        let newKey = name.toLowerCase().replace(/\s/g, '');
-        productCategories[editingProductIndex].label = name;
-        productCategories[editingProductIndex].defaultPrice = price;
-        productCategories[editingProductIndex].key = newKey;
-        showNotification("Product bijgewerkt.", "success");
-        editingProductIndex = -1;
-        document.getElementById("addProductButton").textContent = "Voeg product toe";
-      }
-      nameInput.value = "";
-      priceInput.value = "";
-      localStorage.setItem("productCategories", JSON.stringify(productCategories));
-      updateAdminProductList();
-      loadProducts();
-      updateOverzicht();
-      updateAdminContent();
-      updateInventoryDisplay();
-      updateBarcodeList();
-    }
-    function deleteProduct(index) {
-      if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
-        productCategories.splice(index, 1);
-        showNotification("Product verwijderd.", "success");
-        localStorage.setItem("productCategories", JSON.stringify(productCategories));
-        updateAdminProductList();
-        loadProducts();
-        updateOverzicht();
-        updateAdminContent();
-        updateInventoryDisplay();
-        updateBarcodeList();
-      }
-    }
-    
-    /* ADMIN: VOORRAAD OVERZICHT */
-    function updateInventoryOverview() {
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      let html = "<table><tr><th>Categorie</th><th>Voorraad</th><th>Acties</th></tr>";
-      productCategories.forEach(cat => {
-        let catKey = cat.key;
-        let items = (inventory[catKey] || []).join(", ");
-        html += `<tr>
-                    <td>${cat.label}</td>
-                    <td>${items || "Geen items"}</td>
-                    <td><button onclick="editInventoryCategory('${catKey}')">Bewerk</button></td>
-                 </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("inventoryOverview").innerHTML = html;
-      updateInventoryCategoryDropdown();
-    }
-    function updateInventoryCategoryDropdown() {
-      let select = document.getElementById("inventoryCategory");
-      select.innerHTML = "";
-      productCategories.forEach(cat => {
-        let option = document.createElement("option");
-        option.value = cat.key;
-        option.text = cat.label;
-        select.appendChild(option);
-      });
-    }
-    function editInventoryCategory(catKey) {
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      let currentItems = inventory[catKey] || [];
-      let newItems = prompt("Pas de voorraad aan (scheid items met een komma):", currentItems.join(", "));
-      if (newItems !== null) {
-        let updatedItems = newItems.split(",").map(item => item.trim()).filter(item => item !== "");
-        inventory[catKey] = updatedItems;
-        localStorage.setItem("inventory", JSON.stringify(inventory));
-        updateInventoryOverview();
-        updateInventoryDisplay();
-        showNotification("Voorraad bijgewerkt.", "success");
-      }
-    }
-    function addInventoryItem() {
-      let category = document.getElementById("inventoryCategory").value;
-      let itemName = document.getElementById("inventoryItem").value.trim();
-      if (!itemName) { showNotification("Voer een item naam in.", "error"); return; }
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      if (!inventory[category]) { inventory[category] = []; }
-      inventory[category].push(itemName);
-      localStorage.setItem("inventory", JSON.stringify(inventory));
-      document.getElementById("inventoryItem").value = "";
-      updateInventoryOverview();
-      updateInventoryDisplay();
-      showNotification("Item toegevoegd.", "success");
-    }
-    function updateInventoryDisplay() {
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
-      productCategories.forEach(cat => {
-        let catKey = cat.key;
-        let items = (inventory[catKey] || []).join(", ");
-        html += `<tr>
-                   <td>${cat.label}</td>
-                   <td>${items || "Geen items"}</td>
-                 </tr>`;
-      });
-      html += "</table>";
-      let invDisplay = document.getElementById("inventoryDisplay");
-      if (invDisplay) { invDisplay.innerHTML = html; }
-    }
-    
-    /* BARCODE SCANNER */
-    document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") { handleBarcodeScan(); }
-    });
-    function handleBarcodeScan() {
-      let scannedValue = document.getElementById("barcodeInput").value.trim();
-      if (!scannedValue) return;
-      let foundUser = null;
-      for (const [name, code] of Object.entries(userBarcodes)) {
-        if (code === scannedValue) { foundUser = name; break; }
-      }
-      if (foundUser) {
-        currentUser = foundUser;
-        document.getElementById("username").value = foundUser;
-        showNotification(`Gebruiker geselecteerd: ${foundUser}`, "success");
-        document.getElementById("barcodeInput").value = "";
-        return;
-      }
-      if (!currentUser) {
-        showNotification("Geen gebruiker geselecteerd. Scan eerst de gebruikersbarcode.", "error");
-        document.getElementById("barcodeInput").value = "";
-        return;
-      }
-      let product = productCategories.find(p => p.barcode === scannedValue);
-      if (product) {
-        let productDivs = document.querySelectorAll(".product");
-        productDivs.forEach(div => {
-          if (div.dataset.key === product.key) {
-            div.click();
-            showNotification(`${product.label} toegevoegd via barcode.`, "success");
-          }
-        });
-      } else {
-        showNotification("Barcode niet herkend.", "error");
-      }
-      document.getElementById("barcodeInput").value = "";
-      document.getElementById("barcodeInput").focus();
-    }
-    
-    /* BARCODE LIJST OP HOOFDSCHERM */
-    function updateBarcodeListModal() {
-      let container = document.getElementById("barcodeListModal");
-      container.innerHTML = "";
-      productCategories.forEach(product => {
-        let wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "barcode-modal-" + product.key;
-        wrapper.appendChild(svg);
-        let caption = document.createElement("div");
-        caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 2, height: 50 });
-      });
-    }
-    function showBarcodeList() {
-      updateBarcodeListModal();
-      document.getElementById("barcodeModal").style.display = "block";
-      document.getElementById("barcodeModal").scrollTop = 0;
-    }
-    
-    /* UPDATE USER BARCODE LIJST (voor sectie 4) */
+    /**********************
+     * USER BARCODE MANAGEMENT (EXPORT/IMPORT & VERWIJDEREN)
+     **********************/
     function updateUserBarcodeList() {
-      let container = document.getElementById("userBarcodeList");
-      if (!container) return;
+      const container = document.getElementById("userBarcodeList");
       container.innerHTML = "";
-      for (const [user, code] of Object.entries(userBarcodes)) {
-        let wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "user-barcode-" + user.replace(/\s/g, '');
-        wrapper.appendChild(svg);
-        let caption = document.createElement("div");
-        caption.textContent = user + " (Barcode: " + code + ")";
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      for (let username in userBarcodes) {
+        const div = document.createElement("div");
+        div.style.marginBottom = "5px";
+        div.innerHTML = `<strong>${username}</strong>: ${userBarcodes[username]} 
+                         <button onclick="deleteUserBarcode('${username}')" style="margin-left:10px;">Verwijder</button>`;
+        container.appendChild(div);
       }
     }
     
-    /* UPDATE USER BARCODE LIJST IN ADMIN VIEW */
     function updateUserBarcodeListAdmin() {
-      let container = document.getElementById("userBarcodeListAdmin");
-      if (!container) return;
+      const container = document.getElementById("userBarcodeListAdmin");
       container.innerHTML = "";
-      for (const [user, code] of Object.entries(userBarcodes)) {
-        let wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "user-barcode-admin-" + user.replace(/\s/g, '');
-        wrapper.appendChild(svg);
-        let caption = document.createElement("div");
-        caption.textContent = user + " (Barcode: " + code + ")";
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      for (let username in userBarcodes) {
+        const div = document.createElement("div");
+        div.style.marginBottom = "5px";
+        div.innerHTML = `<strong>${username}</strong>: ${userBarcodes[username]} 
+                         <button onclick="deleteUserBarcode('${username}')" style="margin-left:10px;">Verwijder</button>`;
+        container.appendChild(div);
       }
     }
     
-    window.addEventListener("load", () => { document.getElementById("barcodeInput").focus(); });
+    function deleteUserBarcode(username) {
+      if (confirm(`Weet je zeker dat je de barcode voor ${username} wilt verwijderen?`)) {
+        delete userBarcodes[username];
+        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+        updateUserBarcodeList();
+        updateUserBarcodeListAdmin();
+        showNotification(`Barcode voor ${username} is verwijderd.`, "success");
+      }
+    }
     
-    // INITIAL CALLS
+    function exportUserBarcodes() {
+      const dataStr = JSON.stringify(userBarcodes, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "userBarcodes.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    function importUserBarcodes(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          // Voeg de geïmporteerde data toe aan de bestaande userBarcodes
+          Object.assign(userBarcodes, importedData);
+          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+          updateUserBarcodeList();
+          updateUserBarcodeListAdmin();
+          showNotification("User barcodes succesvol geïmporteerd.", "success");
+        } catch (err) {
+          showNotification("Fout bij het importeren van de data.", "error");
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    /**********************
+     * INITIAL LOAD
+     **********************/
+    // Laad producten en overzicht
     loadProducts();
-    updateDatalist();
     updateOverzicht();
-    updateInventoryDisplay();
+    updateDatalist();
+    // Werk de user barcode lijsten bij
     updateUserBarcodeList();
     updateUserBarcodeListAdmin();
   </script>

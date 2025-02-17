@@ -25,8 +25,8 @@
     }
     /* De rijen passen zich aan de ruimte aan in plaats van 100% breed te zijn */
     #mainContainer .row {
-      flex: 1 1 300px; /* Min breedte 300px, en groeit mee */
-      max-width: 45%;  /* Pas dit aan als je liever meer of minder kolommen wilt */
+      flex: 1 1 300px;
+      max-width: 45%;
       margin: 0;
       background: #fff;
       padding: 20px;
@@ -282,7 +282,7 @@
     
     let currentUser = "";
     
-    // Als de gebruiker de naam invult: maak (indien nodig) een barcode aan
+    // Wanneer de gebruiker een naam invult: maak (indien nodig) een barcode aan
     document.getElementById("username").addEventListener("blur", function() {
       let username = this.value.trim();
       if (username && !userBarcodes[username]) {
@@ -305,7 +305,7 @@
     
     let selectedCounts = {};
     
-    // Laad de producten en genereer barcodes in de vakjes
+    // Laad de producten en genereer duidelijke barcodes
     function loadProducts() {
       const container = document.getElementById("products");
       container.innerHTML = "";
@@ -327,8 +327,14 @@
         svg.style.margin = "10px auto";
         div.appendChild(svg);
         
-        // Genereer barcode met vaste opties voor een duidelijke weergave
-        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: true, width: 2, height: 50, margin: 0 });
+        // Genereer een duidelijkere barcode (grotere breedte, hoogte en marge)
+        JsBarcode(svg, category.barcode, { 
+          format: "CODE128", 
+          displayValue: true, 
+          width: 3, 
+          height: 60, 
+          margin: 5 
+        });
         
         // Linkerklik: verhoog teller
         div.addEventListener("click", function() {
@@ -513,7 +519,6 @@
       });
       html += "</table>";
       
-      // Voorraad overzicht toevoegen
       let inv = JSON.parse(localStorage.getItem("inventory"));
       html += "<h3>Voorraad</h3>";
       html += "<table>";
@@ -625,16 +630,44 @@
     }
     
     /**********************
-     * USER BARCODE MANAGEMENT
+     * USER BARCODE MANAGEMENT (MET WEERGAVE ALS BARCODE)
      **********************/
     function updateUserBarcodeList() {
       const container = document.getElementById("userBarcodeList");
       container.innerHTML = "";
       for (let username in userBarcodes) {
         const div = document.createElement("div");
-        div.style.marginBottom = "5px";
-        div.innerHTML = `<strong>${username}</strong>: ${userBarcodes[username]} 
-                         <button onclick="deleteUserBarcode('${username}')" style="margin-left:10px;">Verwijder</button>`;
+        div.style.marginBottom = "15px";
+        // Toon gebruikersnaam
+        const nameEl = document.createElement("strong");
+        nameEl.textContent = username + ": ";
+        div.appendChild(nameEl);
+        // Maak een SVG voor de barcode
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.style.display = "inline-block";
+        svg.style.verticalAlign = "middle";
+        svg.style.marginRight = "10px";
+        // Genereer de barcode voor de user
+        JsBarcode(svg, userBarcodes[username], { 
+          format: "CODE128", 
+          displayValue: true, 
+          width: 2, 
+          height: 50, 
+          margin: 5 
+        });
+        div.appendChild(svg);
+        // Voeg de verwijderknop toe
+        const btn = document.createElement("button");
+        btn.textContent = "Verwijder";
+        btn.style.marginLeft = "10px";
+        btn.onclick = function() {
+          delete userBarcodes[username];
+          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+          updateUserBarcodeList();
+          updateUserBarcodeListAdmin();
+          showNotification(`Barcode voor ${username} is verwijderd.`, "success");
+        };
+        div.appendChild(btn);
         container.appendChild(div);
       }
     }
@@ -644,20 +677,34 @@
       container.innerHTML = "";
       for (let username in userBarcodes) {
         const div = document.createElement("div");
-        div.style.marginBottom = "5px";
-        div.innerHTML = `<strong>${username}</strong>: ${userBarcodes[username]} 
-                         <button onclick="deleteUserBarcode('${username}')" style="margin-left:10px;">Verwijder</button>`;
+        div.style.marginBottom = "15px";
+        const nameEl = document.createElement("strong");
+        nameEl.textContent = username + ": ";
+        div.appendChild(nameEl);
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.style.display = "inline-block";
+        svg.style.verticalAlign = "middle";
+        svg.style.marginRight = "10px";
+        JsBarcode(svg, userBarcodes[username], { 
+          format: "CODE128", 
+          displayValue: true, 
+          width: 2, 
+          height: 50, 
+          margin: 5 
+        });
+        div.appendChild(svg);
+        const btn = document.createElement("button");
+        btn.textContent = "Verwijder";
+        btn.style.marginLeft = "10px";
+        btn.onclick = function() {
+          delete userBarcodes[username];
+          localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+          updateUserBarcodeList();
+          updateUserBarcodeListAdmin();
+          showNotification(`Barcode voor ${username} is verwijderd.`, "success");
+        };
+        div.appendChild(btn);
         container.appendChild(div);
-      }
-    }
-    
-    function deleteUserBarcode(username) {
-      if (confirm(`Weet je zeker dat je de barcode voor ${username} wilt verwijderen?`)) {
-        delete userBarcodes[username];
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateUserBarcodeList();
-        updateUserBarcodeListAdmin();
-        showNotification(`Barcode voor ${username} is verwijderd.`, "success");
       }
     }
     

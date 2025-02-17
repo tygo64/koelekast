@@ -16,18 +16,9 @@
       padding: 20px;
       margin: 0;
     }
-    /* Container voor de rijen in een flex layout */
-    #mainContainer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-    }
-    /* De rijen passen zich aan de ruimte aan in plaats van 100% breed te zijn */
-    #mainContainer .row {
-      flex: 1 1 300px;
-      max-width: 45%;
-      margin: 0;
+    .row {
+      width: 100%;
+      margin-bottom: 20px;
       background: #fff;
       padding: 20px;
       border-radius: 15px;
@@ -37,10 +28,11 @@
       color: #ff6b81;
       margin-top: 0;
     }
-    /* Producten styling */
+    /* Producten: horizontale rij */
     #products {
       display: flex;
       flex-wrap: wrap;
+      gap: 10px;
       justify-content: center;
     }
     .product {
@@ -145,46 +137,43 @@
   </style>
 </head>
 <body>
-  <!-- Notificatie-element -->
+  <!-- Notificatie -->
   <div id="notification"></div>
 
-  <!-- Flex-container voor de rijen -->
-  <div id="mainContainer">
-    <!-- Row 1: Overzicht & Voorraad -->
-    <div id="row1" class="row">
-      <h2>Overzicht & Voorraad</h2>
-      <div id="Overzicht"></div>
-    </div>
+  <!-- Overzicht & Voorraad -->
+  <div id="overzichtContainer" class="row">
+    <h2>Overzicht & Voorraad</h2>
+    <div id="Overzicht"></div>
+  </div>
 
-    <!-- Row 2: Producten -->
-    <div id="row2" class="row">
-      <h2>Producten</h2>
-      <div id="products"></div>
-    </div>
+  <!-- Producten (horizontaal) -->
+  <div id="productContainer" class="row">
+    <h2>Producten</h2>
+    <div id="products"></div>
+  </div>
 
-    <!-- Row 3: Nieuwe gebruiker & Acties -->
-    <div id="row3" class="row">
-      <h2>Nieuwe gebruiker & Acties</h2>
-      <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
-      <datalist id="usernames"></datalist>
-      <div id="barcodeScannerContainer">
-        <label for="barcodeInput">Scan Barcode:</label>
-        <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
-      </div>
-      <div id="buttonContainer">
-        <button onclick="confirmPurchase()">Bevestig aankoop</button>
-        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-        <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
-        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
-      </div>
+  <!-- Nieuwe gebruiker & Acties (onder de producten) -->
+  <div id="userActionsContainer" class="row">
+    <h2>Nieuwe gebruiker & Acties</h2>
+    <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
+    <datalist id="usernames"></datalist>
+    <div id="barcodeScannerContainer">
+      <label for="barcodeInput">Scan Barcode:</label>
+      <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
     </div>
+    <div id="buttonContainer">
+      <button onclick="confirmPurchase()">Bevestig aankoop</button>
+      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+      <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+    </div>
+  </div>
 
-    <!-- Row 4: Gebruikers Barcode Lijst -->
-    <div id="row4" class="row">
-      <h2>Gebruikers Barcode Lijst</h2>
-      <div id="userBarcodeList"></div>
-    </div>
+  <!-- Gebruikers Barcode Lijst -->
+  <div id="userBarcodeContainer" class="row">
+    <h2>Gebruikers Barcode Lijst</h2>
+    <div id="userBarcodeList"></div>
   </div>
 
   <!-- Modals -->
@@ -197,7 +186,7 @@
     <div id="barcodeListModal"></div>
   </div>
 
-  <!-- Admin overzicht -->
+  <!-- Admin Overzicht -->
   <div id="adminView" class="row" style="display: none;">
     <h1>Admin Overzicht</h1>
     <div id="adminContent"></div>
@@ -226,14 +215,13 @@
         notif.style.display = "none";
       }, 3000);
     }
-    
     function closeModal() {
       document.getElementById("modal").style.display = "none";
     }
     function closeBarcodeModal() {
       document.getElementById("barcodeModal").style.display = "none";
     }
-    
+
     /**********************
      * ADMIN MENU FUNCTIES
      **********************/
@@ -245,16 +233,16 @@
       document.getElementById("adminView").style.display = "none";
     }
     function removeAllInfo() {
-      if(confirm("Weet je zeker dat je alle informatie wilt verwijderen?")) {
+      if (confirm("Weet je zeker dat je alle informatie wilt verwijderen?")) {
         localStorage.clear();
         location.reload();
       }
     }
-    
+
     /**********************
      * PRODUCT- & BARCODE SETUP
      **********************/
-    // Hardcoded productcategorieën met barcode waarden
+    // Hardcoded productcategorieën
     let productCategories = [
       { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
       { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
@@ -262,8 +250,8 @@
       { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
     ];
     localStorage.setItem("productCategories", JSON.stringify(productCategories));
-    
-    // Inventory en userBarcodes (indien nog niet aanwezig)
+
+    // Inventory en userBarcodes
     let inventory = JSON.parse(localStorage.getItem("inventory"));
     if (!inventory) {
       inventory = {
@@ -279,10 +267,9 @@
       userBarcodes = {};
       localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
     }
-    
     let currentUser = "";
-    
-    // Wanneer de gebruiker een naam invult: maak (indien nodig) een barcode aan
+
+    // Maak barcode aan voor een nieuwe gebruiker bij blur
     document.getElementById("username").addEventListener("blur", function() {
       let username = this.value.trim();
       if (username && !userBarcodes[username]) {
@@ -296,15 +283,15 @@
         currentUser = username;
       }
     });
-    
+
     // Focus op barcodeInput als er buiten username geklikt wordt
     document.addEventListener("click", function(e) {
       if (e.target.id === "username" || e.target.id === "barcodeInput") return;
       document.getElementById("barcodeInput").focus();
     });
-    
+
     let selectedCounts = {};
-    
+
     // Laad de producten en genereer duidelijke barcodes
     function loadProducts() {
       const container = document.getElementById("products");
@@ -313,21 +300,21 @@
         let div = document.createElement("div");
         div.className = "product";
         div.dataset.key = category.key;
-        
+
         // Label
         let labelDiv = document.createElement("div");
         labelDiv.textContent = category.label;
         labelDiv.style.fontWeight = "bold";
         div.appendChild(labelDiv);
-        
-        // SVG-element voor barcode
+
+        // SVG voor de productbarcode
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode-" + category.key;
         svg.style.display = "block";
         svg.style.margin = "10px auto";
         div.appendChild(svg);
-        
-        // Genereer een duidelijkere barcode (grotere breedte, hoogte en marge)
+
+        // Genereer een duidelijke barcode
         JsBarcode(svg, category.barcode, { 
           format: "CODE128", 
           displayValue: true, 
@@ -335,17 +322,17 @@
           height: 60, 
           margin: 5 
         });
-        
-        // Linkerklik: verhoog teller
+
+        // Product wordt automatisch geselecteerd bij klik
         div.addEventListener("click", function() {
           let count = selectedCounts[category.key] || 0;
-          count++;
+          count = count ? count + 1 : 1;
           selectedCounts[category.key] = count;
           labelDiv.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
           div.classList.add("selected");
         });
-        
-        // Rechterklik: verlaag teller en voorkom contextmenu
+
+        // Rechterklik: verlaag teller
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;
@@ -361,11 +348,11 @@
             }
           }
         });
-        
+
         container.appendChild(div);
       });
     }
-    
+
     /**********************
      * AANKOOP & OVERZICHT FUNCTIES
      **********************/
@@ -383,7 +370,6 @@
         updateUserBarcodeListAdmin();
       }
       currentUser = username;
-      
       if (Object.keys(selectedCounts).length === 0) {
         showNotification("Kies minstens één categorie!", "error");
         return;
@@ -419,7 +405,7 @@
         el.classList.remove("selected");
       });
     }
-    
+
     function removePurchase() {
       let username = document.getElementById("username").value.trim();
       if (!username) {
@@ -457,7 +443,7 @@
       updateOverzicht();
       showNotification(`Er is 1x ${removed[0].name} verwijderd.`, "success");
     }
-    
+
     function showPurchases() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let allPurchases = [];
@@ -480,7 +466,7 @@
       document.getElementById("modalContent").innerHTML = html;
       document.getElementById("modal").style.display = "block";
     }
-    
+
     function updateDatalist() {
       let datalist = document.getElementById("usernames");
       datalist.innerHTML = "";
@@ -491,7 +477,7 @@
         datalist.appendChild(option);
       }
     }
-    
+
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
@@ -531,7 +517,7 @@
       
       document.getElementById("Overzicht").innerHTML = html;
     }
-    
+
     /**********************
      * ADMIN FUNCTIES
      **********************/
@@ -567,7 +553,7 @@
       html += "</table>";
       document.getElementById("adminContent").innerHTML = html;
     }
-    
+
     function removeUser(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -579,7 +565,7 @@
         showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
       }
     }
-    
+
     function adminRemoveProduct(username) {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       if (!purchases[username] || purchases[username].length === 0) {
@@ -613,7 +599,7 @@
       updateAdminContent();
       showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${username}.`, "success");
     }
-    
+
     function adminRemoveAllGoods(username) {
       if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
@@ -628,7 +614,7 @@
         showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
       }
     }
-    
+
     /**********************
      * USER BARCODE MANAGEMENT (MET WEERGAVE ALS BARCODE)
      **********************/
@@ -638,16 +624,13 @@
       for (let username in userBarcodes) {
         const div = document.createElement("div");
         div.style.marginBottom = "15px";
-        // Toon gebruikersnaam
         const nameEl = document.createElement("strong");
         nameEl.textContent = username + ": ";
         div.appendChild(nameEl);
-        // Maak een SVG voor de barcode
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.style.display = "inline-block";
         svg.style.verticalAlign = "middle";
         svg.style.marginRight = "10px";
-        // Genereer de barcode voor de user
         JsBarcode(svg, userBarcodes[username], { 
           format: "CODE128", 
           displayValue: true, 
@@ -656,7 +639,6 @@
           margin: 5 
         });
         div.appendChild(svg);
-        // Voeg de verwijderknop toe
         const btn = document.createElement("button");
         btn.textContent = "Verwijder";
         btn.style.marginLeft = "10px";
@@ -671,7 +653,7 @@
         container.appendChild(div);
       }
     }
-    
+
     function updateUserBarcodeListAdmin() {
       const container = document.getElementById("userBarcodeListAdmin");
       container.innerHTML = "";
@@ -707,7 +689,7 @@
         container.appendChild(div);
       }
     }
-    
+
     function exportUserBarcodes() {
       const dataStr = JSON.stringify(userBarcodes, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -719,7 +701,7 @@
       a.click();
       document.body.removeChild(a);
     }
-    
+
     function importUserBarcodes(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -738,7 +720,7 @@
       };
       reader.readAsText(file);
     }
-    
+
     /**********************
      * INITIAL LOAD
      **********************/

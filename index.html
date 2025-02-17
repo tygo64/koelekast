@@ -43,18 +43,6 @@
       border: 1px solid #f5c6cb;
     }
 
-    /* Barcode scanner bovenaan de pagina */
-    .barcode-scan-container {
-      max-width: 600px;
-      margin: 80px auto 20px auto; /* extra bovenruimte zodat de notificatie er niet overheen valt */
-      text-align: center;
-    }
-    .barcode-scan-container input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-    }
-
     /* Grid container met 3 rijen en 4 kolommen */
     #grid-container {
       display: grid;
@@ -76,16 +64,28 @@
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      /* Geen overflow, dus geen scrollwheel */
     }
 
-    /* In de categorieën-sectie blijft de titel bovenaan staan */
+    /* In de categorieën-sectie komt nu ook het scanveld */
     .categories {
       grid-area: products;
       background: #fff;
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .categories h2 {
+      margin-top: 0;
+    }
+    /* Scanveld in categorieën */
+    .barcode-scan-container {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .barcode-scan-container input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
     }
     /* De producten worden in een aparte grid gezet */
     .product-grid {
@@ -113,7 +113,6 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-
     .newuser {
       grid-area: newuser;
       background: #fff;
@@ -266,12 +265,6 @@
   <!-- Notificatie-element -->
   <div id="notification"></div>
 
-  <!-- Barcode Scanner veld bovenaan -->
-  <div class="barcode-scan-container">
-    <label for="barcodeInput">Scan Barcode:</label>
-    <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
-  </div>
-
   <!-- Grid layout -->
   <div id="grid-container">
     <!-- Rij 1 -->
@@ -281,7 +274,12 @@
     </div>
     <div class="categories">
       <h2>Categorieën</h2>
-      <!-- Producten komen in een aparte grid, zodat de titel boven blijft -->
+      <!-- Scanveld komt nu binnen de categorieën -->
+      <div class="barcode-scan-container">
+        <label for="barcodeInput">Scan Barcode:</label>
+        <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
+      </div>
+      <!-- Producten komen in een aparte grid, zodat de titel en het scanveld boven blijven -->
       <div id="products" class="product-grid"></div>
     </div>
     <div class="barcode-list">
@@ -437,13 +435,13 @@
         label.textContent = category.label;
         div.appendChild(label);
         
-        // SVG voor de productbarcode
+        // SVG voor de productbarcode (kleiner gemaakt)
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "product-barcode-" + category.key;
         svg.style.display = "block";
         svg.style.margin = "5px auto 0";
         div.appendChild(svg);
-        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1.5, height: 30 });
+        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
         
         // Klik-event: verhoog teller
         div.addEventListener("click", function() {
@@ -623,7 +621,8 @@
         caption.textContent = user + " (Barcode: " + code + ")";
         wrapper.appendChild(caption);
         container.appendChild(wrapper);
-        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+        // Kleiner gemaakte barcode-instellingen voor gebruikers
+        JsBarcode(svg, code, { format: "CODE128", displayValue: true, width: 1, height: 25 });
       }
     }
 
@@ -727,7 +726,8 @@
         caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
         wrapper.appendChild(caption);
         container.appendChild(wrapper);
-        JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+        // Kleiner gemaakte barcode-instellingen voor producten
+        JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
       });
     }
     function showBarcodeList() {
@@ -851,7 +851,7 @@
     window.addEventListener("load", () => {
       // Focus op barcode input
       document.getElementById("barcodeInput").focus();
-      JsBarcode("#confirmBarcode", confirmPurchaseBarcode, { format: "CODE128", displayValue: true, width: 2, height: 50 });
+      JsBarcode("#confirmBarcode", confirmPurchaseBarcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
       loadProducts();
       updateOverzicht();
       updateInventoryDisplay();

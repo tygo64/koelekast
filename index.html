@@ -145,6 +145,22 @@
       margin-bottom: 10px;
       width: auto;
     }
+    /* Maak de gebruikerslijst scrollbaar */
+    #userBarcodeContainer {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    /* Actiescherm kleiner en links uitgelijnd */
+    #userActionsContainer {
+      max-width: 500px;
+      margin-left: 0;
+      text-align: left;
+    }
+    /* Styling voor de bevestigingsbarcode */
+    #confirmBarcodeContainer {
+      margin-bottom: 20px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -173,14 +189,28 @@
   <!-- Onder de top container: Nieuwe gebruiker & Acties -->
   <div id="userActionsContainer" class="row">
     <h2>Nieuwe gebruiker & Acties</h2>
+    <!-- Gebruikersnaam invoer -->
     <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
     <datalist id="usernames"></datalist>
-    <div id="barcodeScannerContainer">
-      <label for="barcodeInput">Scan Barcode:</label>
-      <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
+
+    <!-- Bevestigingsbarcode: deze barcode wordt getoond zodat je hem kunt scannen om de aankoop te bevestigen -->
+    <div id="confirmBarcodeContainer">
+      <strong>Aankoop bevestigen:</strong>
+      <svg id="confirmBarcodeSVG" style="display:inline-block; vertical-align:middle; margin-left:10px;"></svg>
     </div>
+
+    <!-- Barcode scanner (voor alle scans) -->
+    <div id="barcodeScannerContainer">
+      <label for="barcodeInput">Scan barcode:</label>
+      <input type="text" id="barcodeInput" placeholder="Scan hier barcode (druk op Enter)" autofocus />
+      <small>
+        Scan een productbarcode om het product te selecteren,<br/>
+        scan een gebruikersbarcode om de naam in te vullen,<br/>
+        of scan de bevestigingsbarcode hierboven om de aankoop te bevestigen.
+      </small>
+    </div>
+    <!-- Overige actieknoppen -->
     <div id="buttonContainer">
-      <button onclick="confirmPurchase()">Bevestig aankoop</button>
       <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
       <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
       <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
@@ -215,8 +245,11 @@
 
   <script>
     /**********************
-     * NOTIFICATIE FUNCTIE
+     * CONSTANTEN & HELP FUNCTIES
      **********************/
+    // Speciale barcode voor aankoopbevestiging
+    const CONFIRM_BARCODE = "999999999999";
+
     function showNotification(message, type = "success") {
       const notif = document.getElementById("notification");
       notif.innerText = message;
@@ -281,30 +314,64 @@
     }
     let currentUser = "";
 
-    // Nieuwe gebruiker: maak barcode aan bij blur
-    document.getElementById("username").addEventListener("blur", function() {
-      let username = this.value.trim();
-      if (username && !userBarcodes[username]) {
-        let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-        userBarcodes[username] = newUserBarcode;
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateUserBarcodeList();
-        updateUserBarcodeListAdmin();
-      }
-      if (username) {
-        currentUser = username;
+    /**********************
+     * Bevestigingsbarcode genereren
+     **********************/
+    function renderConfirmBarcode() {
+      JsBarcode(document.getElementById("confirmBarcodeSVG"), CONFIRM_BARCODE, { 
+        format: "CODE128", 
+        displayValue: true, 
+        width: 3, 
+        height: 60, 
+        margin: 5 
+      });
+    }
+    renderConfirmBarcode();
+
+    /**********************
+     * Barcode invoerveld (voor alle scans)
+     **********************/
+    document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        let code = this.value.trim();
+        processBarcode(code);
+        this.value = "";
       }
     });
 
-    // Focus op barcodeInput wanneer niet op username/barcodeInput wordt geklikt
-    document.addEventListener("click", function(e) {
-      if (e.target.id === "username" || e.target.id === "barcodeInput") return;
-      document.getElementById("barcodeInput").focus();
-    });
+    // Verwerkt een gescande barcode
+    function processBarcode(code) {
+      // Check of het een productbarcode is
+      for (let category of productCategories) {
+        if (category.barcode === code) {
+          let productEl = document.getElementById("product-" + category.key);
+          if (productEl) {
+            productEl.click();
+            showNotification("Product " + category.label + " geselecteerd.", "success");
+            return;
+          }
+        }
+      }
+      // Check of de barcode overeenkomt met een gebruikersbarcode
+      for (let username in userBarcodes) {
+        if (userBarcodes[username] === code) {
+          document.getElementById("username").value = username;
+          showNotification("Gebruiker " + username + " geselecteerd.", "success");
+          return;
+        }
+      }
+      // Check of het de bevestigingsbarcode is
+      if (code === CONFIRM_BARCODE) {
+        confirmPurchase();
+        return;
+      }
+      showNotification("Barcode niet herkend.", "error");
+    }
 
+    /**********************
+     * Laad de producten en genereer duidelijke barcodes
+     **********************/
     let selectedCounts = {};
-
-    // Laad de producten en genereer duidelijke barcodes
     function loadProducts() {
       const container = document.getElementById("products");
       container.innerHTML = "";
@@ -312,6 +379,8 @@
         let div = document.createElement("div");
         div.className = "product";
         div.dataset.key = category.key;
+        // Uniek id voor simulatie via barcode scan
+        div.id = "product-" + category.key;
 
         // Label
         let labelDiv = document.createElement("div");
@@ -335,7 +404,7 @@
           margin: 5 
         });
 
-        // Klik: selecteer product (teller ophogen)
+        // Klik (of barcode scannen): verhoog teller & selecteer product
         div.addEventListener("click", function() {
           let count = selectedCounts[category.key] || 0;
           count = count ? count + 1 : 1;
@@ -344,7 +413,7 @@
           div.classList.add("selected");
         });
 
-        // Rechterklik: teller verlagen
+        // Rechterklik verlaagt teller
         div.addEventListener("contextmenu", function(e) {
           e.preventDefault();
           let count = selectedCounts[category.key] || 0;
@@ -406,6 +475,7 @@
       updateDatalist();
       updateOverzicht();
       showNotification(`${username}, je hebt je aankoop bevestigd.`, "success");
+      // Reset geselecteerde producten
       selectedCounts = {};
       document.querySelectorAll(".product").forEach(el => {
         let key = el.dataset.key;
@@ -497,7 +567,7 @@
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-      
+
       let html = "<h3>Top 5 Personen</h3>";
       html += "<table>";
       html += "<tr><th>Gebruiker</th>";
@@ -505,7 +575,7 @@
         html += `<th>${product.label}</th>`;
       });
       html += "<th>Totaal (€)</th></tr>";
-      
+
       users.slice(0, 5).forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
@@ -516,7 +586,7 @@
         html += "</tr>";
       });
       html += "</table>";
-      
+
       let inv = JSON.parse(localStorage.getItem("inventory"));
       html += "<h3>Voorraad</h3>";
       html += "<table>";
@@ -526,7 +596,7 @@
         html += `<tr><td>${cat.label}</td><td>${items || "Geen items"}</td></tr>`;
       });
       html += "</table>";
-      
+
       document.getElementById("Overzicht").innerHTML = html;
     }
 
@@ -540,14 +610,14 @@
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-      
+
       let html = "<table>";
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => {
         html += `<th>${product.label}</th>`;
       });
       html += "<th>Totaal</th><th>Acties</th></tr>";
-      
+
       users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {

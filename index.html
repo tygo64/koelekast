@@ -43,6 +43,18 @@
       border: 1px solid #f5c6cb;
     }
 
+    /* Barcode scanner bovenaan de pagina */
+    .barcode-scan-container {
+      max-width: 600px;
+      margin: 80px auto 20px auto; /* extra bovenruimte zodat de notificatie er niet overheen valt */
+      text-align: center;
+    }
+    .barcode-scan-container input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
     /* Grid container met 3 rijen en 4 kolommen */
     #grid-container {
       display: grid;
@@ -254,6 +266,12 @@
   <!-- Notificatie-element -->
   <div id="notification"></div>
 
+  <!-- Barcode Scanner veld bovenaan -->
+  <div class="barcode-scan-container">
+    <label for="barcodeInput">Scan Barcode:</label>
+    <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
+  </div>
+
   <!-- Grid layout -->
   <div id="grid-container">
     <!-- Rij 1 -->
@@ -294,12 +312,6 @@
       <h2>Voorraad</h2>
       <div id="inventoryDisplay"></div>
     </div>
-  </div>
-
-  <!-- Barcode Scanner invoerveld -->
-  <div style="max-width: 600px; margin: 20px auto;">
-    <label for="barcodeInput">Scan Barcode:</label>
-    <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus style="width:100%; padding:10px; font-size:16px;"/>
   </div>
 
   <!-- Modal voor recente aankopen -->

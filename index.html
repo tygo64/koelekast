@@ -17,7 +17,6 @@
       padding: 20px;
       margin: 0;
     }
-
     /* Notificatie styling */
     #notification {
       position: fixed;
@@ -42,7 +41,6 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
-
     /* Grid container (sidebar layout) */
     #grid-container {
       display: grid;
@@ -54,7 +52,7 @@
       max-width: 1200px;
       margin: 0 auto;
     }
-    /* Sidebar: Acties en Voorraad onder elkaar */
+    /* Sidebar: Acties en Voorraad */
     .sidebar {
       grid-area: sidebar;
       display: flex;
@@ -475,9 +473,16 @@
       container.appendChild(confirmDiv);
     }
 
+    // Overzicht sorteren op totaal besteed (prijs)
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let users = Object.keys(userBarcodes); // Toon alle gebruikers, ook zonder aankopen
+      // Maak een array met alle gebruikers en bereken hun totaalbedrag
+      let usersArray = Object.keys(userBarcodes).map(user => {
+        let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
+        return { user, totalSpent };
+      });
+      // Sorteer op totaalbedrag (hoogste eerst)
+      usersArray.sort((a, b) => b.totalSpent - a.totalSpent);
 
       let html = "<table>";
       html += "<tr><th>Gebruiker</th><th>Barcode</th>";
@@ -486,8 +491,7 @@
       });
       html += "<th>Totaal (€)</th></tr>";
 
-      users.forEach(user => {
-        let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
+      usersArray.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
         productCategories.forEach(product => {
           let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
@@ -499,7 +503,7 @@
       document.getElementById("Overzicht").innerHTML = html;
 
       // Voeg barcodes toe
-      users.forEach(user => {
+      usersArray.forEach(({user}) => {
         let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
         if (svg && userBarcodes[user]) {
           JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
@@ -536,7 +540,7 @@
       updateOverzicht();
       showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
 
-      // Reset selectie
+      // Reset selectie en zet de focus weer op het scanveld zodat je direct verder kunt scannen
       selectedCounts = {};
       document.querySelectorAll(".product").forEach(el => {
         let key = el.dataset.key;
@@ -544,11 +548,8 @@
         if (cat) { el.firstChild.textContent = cat.label; }
         el.classList.remove("selected");
       });
-
-      // Pagina verversen na aankoop
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      document.getElementById("barcodeInput").value = "";
+      document.getElementById("barcodeInput").focus();
     }
 
     function handleBarcodeScan() {
@@ -835,36 +836,54 @@
         });
         html += `<td>€${totalSpent.toFixed(2)}</td>
                  <td>
-                   <button onclick="removeUser('${user}')">Verwijder gebruiker</button><br/>
                    <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
-                   <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button>
+                   <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button><br/>`;
+        // Als gebruiker geen aankopen heeft, geef dan een knop om de gebruiker volledig te verwijderen
+        if(purchases[user].length === 0) {
+          html += `<button onclick="removeUserCompletely('${user}')">Verwijder gebruiker</button><br/>`;
+        }
+        // Knop om de gebruikersbarcode te verwijderen
+        html += `<button onclick="removeUserBarcode('${user}')">Verwijder barcode</button>
                  </td>
                  </tr>`;
       });
       html += "</table>";
       document.getElementById("adminContent").innerHTML = html;
     }
-    function removeUser(username) {
-      if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
+    function removeUserCompletely(user) {
+      if (confirm(`Weet je zeker dat je ${user} volledig wilt verwijderen (alle data inclusief barcode)?`)) {
+        delete userBarcodes[user];
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-        delete purchases[username];
+        delete purchases[user];
         localStorage.setItem("purchases", JSON.stringify(purchases));
+        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
         updateOverzicht();
+        updateUserBarcodeDisplay();
         updateAdminContent();
-        showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
+        showNotification(`Gebruiker ${user} volledig verwijderd.`, "success");
       }
     }
-    function adminRemoveProduct(username) {
+    function removeUserBarcode(user) {
+      if (confirm(`Weet je zeker dat je de barcode van ${user} wilt verwijderen?`)) {
+        delete userBarcodes[user];
+        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+        updateOverzicht();
+        updateUserBarcodeDisplay();
+        updateAdminContent();
+        showNotification(`Barcode van ${user} verwijderd.`, "success");
+      }
+    }
+    function adminRemoveProduct(user) {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[username] || purchases[username].length === 0) {
+      if (!purchases[user] || purchases[user].length === 0) {
         showNotification("Deze gebruiker heeft geen aankopen.", "error");
         return;
       }
       let categoryCounts = {};
-      purchases[username].forEach(purchase => {
+      purchases[user].forEach(purchase => {
         categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
       });
-      let message = `Welke aankoop wil je verwijderen voor ${username}? Voer het nummer in:\n`;
+      let message = `Welke aankoop wil je verwijderen voor ${user}? Voer het nummer in:\n`;
       let categoryList = Object.keys(categoryCounts);
       categoryList.forEach((catName, index) => {
         message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
@@ -876,29 +895,29 @@
         return;
       }
       let selectedCategoryName = categoryList[selectedIndex];
-      let idx = purchases[username].findIndex(p => p.name === selectedCategoryName);
+      let idx = purchases[user].findIndex(p => p.name === selectedCategoryName);
       if (idx === -1) {
         showNotification("Categorie niet gevonden.", "error");
         return;
       }
-      let removed = purchases[username].splice(idx, 1);
+      let removed = purchases[user].splice(idx, 1);
       localStorage.setItem("purchases", JSON.stringify(purchases));
       updateOverzicht();
       updateAdminContent();
-      showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${username}.`, "success");
+      showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${user}.`, "success");
     }
-    function adminRemoveAllGoods(username) {
-      if (confirm(`Weet je zeker dat je alle aankopen van ${username} wilt verwijderen?`)) {
+    function adminRemoveAllGoods(user) {
+      if (confirm(`Weet je zeker dat je alle aankopen van ${user} wilt verwijderen?`)) {
         let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-        if (!purchases[username] || purchases[username].length === 0) {
+        if (!purchases[user] || purchases[user].length === 0) {
           showNotification("Deze gebruiker heeft geen aankopen.", "error");
           return;
         }
-        purchases[username] = [];
+        purchases[user] = [];
         localStorage.setItem("purchases", JSON.stringify(purchases));
         updateOverzicht();
         updateAdminContent();
-        showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
+        showNotification(`Alle aankopen van ${user} zijn verwijderd.`, "success");
       }
     }
     function removePurchase() {

@@ -16,10 +16,18 @@
       padding: 20px;
       margin: 0;
     }
-    /* Elke rij wordt een blok met volledige breedte */
-    .row {
-      width: 100%;
-      margin-bottom: 20px;
+    /* Container voor de rijen in een flex layout */
+    #mainContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    /* De rijen passen zich aan de ruimte aan in plaats van 100% breed te zijn */
+    #mainContainer .row {
+      flex: 1 1 300px; /* Min breedte 300px, en groeit mee */
+      max-width: 45%;  /* Pas dit aan als je liever meer of minder kolommen wilt */
+      margin: 0;
       background: #fff;
       padding: 20px;
       border-radius: 15px;
@@ -140,40 +148,43 @@
   <!-- Notificatie-element -->
   <div id="notification"></div>
 
-  <!-- Row 1: Overzicht en Voorraad -->
-  <div id="row1" class="row">
-    <h2>Overzicht & Voorraad</h2>
-    <div id="Overzicht"></div>
-  </div>
-
-  <!-- Row 2: Producten -->
-  <div id="row2" class="row">
-    <h2>Producten</h2>
-    <div id="products"></div>
-  </div>
-
-  <!-- Row 3: Nieuwe gebruiker & Acties -->
-  <div id="row3" class="row">
-    <h2>Nieuwe gebruiker & Acties</h2>
-    <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
-    <datalist id="usernames"></datalist>
-    <div id="barcodeScannerContainer">
-      <label for="barcodeInput">Scan Barcode:</label>
-      <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
+  <!-- Flex-container voor de rijen -->
+  <div id="mainContainer">
+    <!-- Row 1: Overzicht & Voorraad -->
+    <div id="row1" class="row">
+      <h2>Overzicht & Voorraad</h2>
+      <div id="Overzicht"></div>
     </div>
-    <div id="buttonContainer">
-      <button onclick="confirmPurchase()">Bevestig aankoop</button>
-      <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-      <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-      <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
-      <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
-    </div>
-  </div>
 
-  <!-- Row 4: Lijst met gebruikersbarcodes -->
-  <div id="row4" class="row">
-    <h2>Gebruikers Barcode Lijst</h2>
-    <div id="userBarcodeList"></div>
+    <!-- Row 2: Producten -->
+    <div id="row2" class="row">
+      <h2>Producten</h2>
+      <div id="products"></div>
+    </div>
+
+    <!-- Row 3: Nieuwe gebruiker & Acties -->
+    <div id="row3" class="row">
+      <h2>Nieuwe gebruiker & Acties</h2>
+      <input type="text" id="username" placeholder="Jouw naam" list="usernames" autofocus />
+      <datalist id="usernames"></datalist>
+      <div id="barcodeScannerContainer">
+        <label for="barcodeInput">Scan Barcode:</label>
+        <input type="text" id="barcodeInput" placeholder="Scan hier je barcode" autofocus />
+      </div>
+      <div id="buttonContainer">
+        <button onclick="confirmPurchase()">Bevestig aankoop</button>
+        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+        <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+      </div>
+    </div>
+
+    <!-- Row 4: Gebruikers Barcode Lijst -->
+    <div id="row4" class="row">
+      <h2>Gebruikers Barcode Lijst</h2>
+      <div id="userBarcodeList"></div>
+    </div>
   </div>
 
   <!-- Modals -->
@@ -186,39 +197,15 @@
     <div id="barcodeListModal"></div>
   </div>
 
-  <!-- Admin overzicht (verborgen) -->
-  <div class="row" id="adminView" style="display: none;">
+  <!-- Admin overzicht -->
+  <div id="adminView" class="row" style="display: none;">
     <h1>Admin Overzicht</h1>
     <div id="adminContent"></div>
     <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
     <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
     <div class="admin-section">
-      <h2>Productbeheer</h2>
-      <button onclick="toggleProductManagement()">Producten beheren</button>
-      <div id="adminProductManagement" style="display: none;">
-        <input type="text" id="productName" placeholder="Productnaam" />
-        <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
-        <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
-        <div id="productList"></div>
-      </div>
-    </div>
-    <div class="admin-section">
-      <h2>Voorraad Overzicht</h2>
-      <div id="inventoryOverview"></div>
-      <h3>Voeg nieuw voorraad item toe</h3>
-      <label for="inventoryCategory">Categorie:</label>
-      <select id="inventoryCategory"></select>
-      <input type="text" id="inventoryItem" placeholder="Item naam" />
-      <button onclick="addInventoryItem()">Voeg item toe</button>
-    </div>
-    <div class="admin-section">
-      <h2>Product Barcode Lijst</h2>
-      <div id="barcodeList"></div>
-    </div>
-    <div class="admin-section">
       <h2>Gebruikers Barcode Lijst</h2>
       <div id="userBarcodeListAdmin"></div>
-      <!-- Export en import om data over browsers heen te gebruiken -->
       <button onclick="exportUserBarcodes()">Exporteer User Barcodes</button>
       <label for="importFile" style="display:block;margin-top:10px;">Importeer User Barcodes:</label>
       <input type="file" id="importFile" onchange="importUserBarcodes(event)" />
@@ -236,7 +223,6 @@
       notif.classList.add("show", type);
       notif.style.display = "block";
       setTimeout(() => {
-        notif.classList.remove("show");
         notif.style.display = "none";
       }, 3000);
     }
@@ -249,19 +235,35 @@
     }
     
     /**********************
-     * INITIALISATIE
+     * ADMIN MENU FUNCTIES
      **********************/
-    let productCategories = JSON.parse(localStorage.getItem("productCategories"));
-    if (!productCategories) {
-      productCategories = [
-        { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
-        { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
-        { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
-        { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
-      ];
-      localStorage.setItem("productCategories", JSON.stringify(productCategories));
+    function showAdminOverview() {
+      document.getElementById("adminView").style.display = "block";
+      updateAdminContent();
+    }
+    function hideAdminOverview() {
+      document.getElementById("adminView").style.display = "none";
+    }
+    function removeAllInfo() {
+      if(confirm("Weet je zeker dat je alle informatie wilt verwijderen?")) {
+        localStorage.clear();
+        location.reload();
+      }
     }
     
+    /**********************
+     * PRODUCT- & BARCODE SETUP
+     **********************/
+    // Hardcoded productcategorieën met barcode waarden
+    let productCategories = [
+      { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
+      { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
+      { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
+      { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
+    ];
+    localStorage.setItem("productCategories", JSON.stringify(productCategories));
+    
+    // Inventory en userBarcodes (indien nog niet aanwezig)
     let inventory = JSON.parse(localStorage.getItem("inventory"));
     if (!inventory) {
       inventory = {
@@ -272,7 +274,6 @@
       };
       localStorage.setItem("inventory", JSON.stringify(inventory));
     }
-    
     let userBarcodes = JSON.parse(localStorage.getItem("userBarcodes"));
     if (!userBarcodes) {
       userBarcodes = {};
@@ -281,10 +282,10 @@
     
     let currentUser = "";
     
+    // Als de gebruiker de naam invult: maak (indien nodig) een barcode aan
     document.getElementById("username").addEventListener("blur", function() {
       let username = this.value.trim();
       if (username && !userBarcodes[username]) {
-        // Maak een nieuwe user barcode aan
         let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         userBarcodes[username] = newUserBarcode;
         localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
@@ -296,7 +297,7 @@
       }
     });
     
-    // Focus op barcodeInput tenzij op username geklikt
+    // Focus op barcodeInput als er buiten username geklikt wordt
     document.addEventListener("click", function(e) {
       if (e.target.id === "username" || e.target.id === "barcodeInput") return;
       document.getElementById("barcodeInput").focus();
@@ -304,9 +305,7 @@
     
     let selectedCounts = {};
     
-    /**********************
-     * PRODUCTEN MET BARCODE IN BOXEN
-     **********************/
+    // Laad de producten en genereer barcodes in de vakjes
     function loadProducts() {
       const container = document.getElementById("products");
       container.innerHTML = "";
@@ -321,18 +320,18 @@
         labelDiv.style.fontWeight = "bold";
         div.appendChild(labelDiv);
         
-        // SVG voor barcode
+        // SVG-element voor barcode
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.id = "barcode-" + category.key;
         svg.style.display = "block";
         svg.style.margin = "10px auto";
         div.appendChild(svg);
         
-        // Barcode genereren
-        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+        // Genereer barcode met vaste opties voor een duidelijke weergave
+        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: true, width: 2, height: 50, margin: 0 });
         
         // Linkerklik: verhoog teller
-        div.addEventListener("click", function(e) {
+        div.addEventListener("click", function() {
           let count = selectedCounts[category.key] || 0;
           count++;
           selectedCounts[category.key] = count;
@@ -362,7 +361,7 @@
     }
     
     /**********************
-     * AANKOOPEN & OVERZICHT
+     * AANKOOP & OVERZICHT FUNCTIES
      **********************/
     function confirmPurchase() {
       let username = document.getElementById("username").value.trim();
@@ -487,7 +486,6 @@
       }
     }
     
-    // OVERZICHT: Toon maximaal 5 personen en de voorraad
     function updateOverzicht() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
       let users = Object.keys(purchases).map(user => {
@@ -515,14 +513,13 @@
       });
       html += "</table>";
       
-      // Voeg de voorraad toe onder het overzicht
+      // Voorraad overzicht toevoegen
       let inv = JSON.parse(localStorage.getItem("inventory"));
       html += "<h3>Voorraad</h3>";
       html += "<table>";
       html += "<tr><th>Categorie</th><th>Items</th></tr>";
       productCategories.forEach(cat => {
-        let catKey = cat.key;
-        let items = (inv[catKey] || []).join(", ");
+        let items = (inv[cat.key] || []).join(", ");
         html += `<tr><td>${cat.label}</td><td>${items || "Geen items"}</td></tr>`;
       });
       html += "</table>";
@@ -628,7 +625,7 @@
     }
     
     /**********************
-     * USER BARCODE MANAGEMENT (EXPORT/IMPORT & VERWIJDEREN)
+     * USER BARCODE MANAGEMENT
      **********************/
     function updateUserBarcodeList() {
       const container = document.getElementById("userBarcodeList");
@@ -683,7 +680,6 @@
       reader.onload = function(e) {
         try {
           const importedData = JSON.parse(e.target.result);
-          // Voeg de geïmporteerde data toe aan de bestaande userBarcodes
           Object.assign(userBarcodes, importedData);
           localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
           updateUserBarcodeList();
@@ -699,11 +695,9 @@
     /**********************
      * INITIAL LOAD
      **********************/
-    // Laad producten en overzicht
     loadProducts();
     updateOverzicht();
     updateDatalist();
-    // Werk de user barcode lijsten bij
     updateUserBarcodeList();
     updateUserBarcodeListAdmin();
   </script>

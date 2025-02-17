@@ -11,12 +11,12 @@
   <style>
     /* Algemene styling */
     body {
-  font-family: 'Comic Neue', cursive, sans-serif;
-  background: linear-gradient(to bottom right, #fceabb, #f8b500);
-  color: #333;
-  padding: 20px;
-  margin: 0;
-}
+      font-family: 'Comic Neue', cursive, sans-serif;
+      background: linear-gradient(to bottom right, #fceabb, #f8b500);
+      color: #333;
+      padding: 20px;
+      margin: 0;
+    }
 
     /* Notificatie styling */
     #notification {
@@ -43,28 +43,24 @@
       border: 1px solid #f5c6cb;
     }
 
-    /* Grid container met 3 rijen en 4 kolommen */
+    /* Grid container (sidebar layout) */
     #grid-container {
-  display: grid;
-  grid-template-areas: 
-    "overview products products sidebar"
-    "overview products products sidebar";
-  grid-template-columns: 2fr 1fr 1fr 1fr; /* Sidebar is nu 1 kolom rechts */
-  gap: 15px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Sidebar: Acties en Voorraad onder elkaar */
-.sidebar {
-  grid-area: sidebar;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-
-    /* Eerste rij */
+      display: grid;
+      grid-template-areas: 
+        "overview products products"
+        "sidebar sidebar sidebar";
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 15px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    /* Sidebar: Acties en Voorraad onder elkaar */
+    .sidebar {
+      grid-area: sidebar;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
     .overview {
       grid-area: overview;
       background: #fff;
@@ -72,8 +68,6 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-
-    /* In de categorieën-sectie komt nu ook het scanveld */
     .categories {
       grid-area: products;
       background: #fff;
@@ -84,7 +78,6 @@
     .categories h2 {
       margin-top: 0;
     }
-    /* Scanveld in categorieën */
     .barcode-scan-container {
       margin-bottom: 15px;
       text-align: center;
@@ -94,58 +87,30 @@
       padding: 8px;
       font-size: 16px;
     }
-    /* De producten worden in een aparte grid gezet */
     .product-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px;
-      justify-items: center; /* Centreert de items horizontaal */
-      align-items: center;   /* Centreert de items verticaal */
+      justify-items: center;
+      align-items: center;
     }
-
     .barcode-list {
-      grid-area: barcode;
       background: #fff;
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       overflow-y: auto;
     }
-
-    /* Tweede rij */
-    .actions {
-      grid-area: actions;
+    .actions, .inventory {
       background: #fff;
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    .newuser {
-      grid-area: newuser;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-height: 150px;
-    }
-
-    /* Derde rij */
-    .inventory {
-      grid-area: inventory;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      overflow-y: auto;
-    }
-
-    /* Koppen */
     h1, h2, h3 {
       color: #ff6b81;
       margin-top: 0;
     }
-
-    /* Productcategorie-knoppen (de individuele producten) */
     .product {
       padding: 15px;
       border: 2px solid #f8b500;
@@ -154,7 +119,7 @@
       background-color: #fff;
       border-radius: 10px;
       transition: all 0.3s ease;
-      width: 150px;  /* Vaste breedte zodat ze netjes in de grid passen */
+      width: 150px;
       height: 150px;
       display: flex;
       flex-direction: column;
@@ -167,8 +132,6 @@
       background-color: #ffeaa7;
       transform: scale(1.05);
     }
-
-    /* Standaard knoppen */
     button {
       margin-top: 15px;
       padding: 12px;
@@ -191,8 +154,6 @@
     .delete-btn {
       background-color: #ff7979;
     }
-
-    /* Input & Select styling */
     input, select {
       width: 100%;
       padding: 8px;
@@ -211,8 +172,6 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-
-    /* Tabel styling */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -230,8 +189,6 @@
       background-color: #ff6b81;
       color: #fff;
     }
-
-    /* Modal styling */
     #modal, #barcodeModal {
       display: none;
       position: fixed;
@@ -251,37 +208,40 @@
       margin-bottom: 10px;
       width: auto;
     }
-
-    /* Responsiviteit: herstructureren op kleinere schermen */
     @media (max-width: 800px) {
       #grid-container {
         grid-template-areas:
           "overview"
           "products"
-          "barcode"
-          "actions"
-          "newuser"
-          "inventory";
+          "sidebar";
         grid-template-columns: 1fr;
-        grid-template-rows: auto;
       }
     }
-
     .overview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.new-user-container {
-  display: flex;
-  gap: 10px;
-}
-
-.new-user-container input {
-  width: 150px; /* Beperkte breedte zodat het goed past */
-}
-    
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .new-user-container {
+      display: flex;
+      gap: 10px;
+    }
+    .new-user-container input {
+      width: 150px;
+    }
+    /* Admin view styling */
+    #adminView {
+      display: none;
+      max-width: 1200px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .admin-section {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -290,7 +250,7 @@
 
   <!-- Grid layout -->
   <div id="grid-container">
-    <!-- Rij 1 -->
+    <!-- Overzicht -->
     <div class="overview">
       <div class="overview-header">
         <h2>Overzicht</h2>
@@ -301,35 +261,33 @@
       </div>
       <div id="Overzicht"></div>
     </div>
+    <!-- Categorieën -->
     <div class="categories">
       <h2>Categorieën</h2>
-      <!-- Scanveld komt nu binnen de categorieën -->
       <div class="barcode-scan-container">
         <label for="barcodeInput">Scan Barcode:</label>
         <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
       </div>
-      <!-- Producten komen in een aparte grid, zodat de titel en het scanveld boven blijven -->
       <div id="products" class="product-grid"></div>
     </div>
-    
-    <!-- Sidebar met Acties en Voorraad onder elkaar -->
-<div class="sidebar">
-  <div class="actions">
-    <h2>Acties</h2>
-    <div>
-      <p>Scan de onderstaande barcode om aankoop te bevestigen:</p>
+    <!-- Sidebar: Acties en Voorraad -->
+    <div class="sidebar">
+      <div class="actions">
+        <h2>Acties</h2>
+        <div>
+          <p>Scan de onderstaande barcode om aankoop te bevestigen:</p>
+        </div>
+        <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
+        <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
+        <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+        <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
+      </div>
+      <div class="inventory">
+        <h2>Voorraad</h2>
+        <div id="inventoryDisplay"></div>
+      </div>
     </div>
-    <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
-    <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-    <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
-    <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
   </div>
-
-  <div class="inventory">
-    <h2>Voorraad</h2>
-    <div id="inventoryDisplay"></div>
-  </div>
-</div>
 
   <!-- Modal voor recente aankopen -->
   <div id="modal">
@@ -344,7 +302,7 @@
   </div>
 
   <!-- Admin overzicht -->
-  <div id="adminView" class="container" style="display: none;">
+  <div id="adminView" class="container">
     <h1>Admin Overzicht</h1>
     <div id="adminContent"></div>
     <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
@@ -353,7 +311,6 @@
       <h2>Productbeheer</h2>
       <button onclick="toggleProductManagement()">Producten beheren</button>
       <div id="adminProductManagement" style="display: none;">
-        <!-- Nieuwe categorie toevoegen -->
         <input type="text" id="productName" placeholder="Productnaam" />
         <input type="number" id="productPrice" placeholder="Prijs" step="0.01" />
         <button id="addProductButton" onclick="addOrUpdateProduct()">Voeg product toe</button>
@@ -379,7 +336,6 @@
     </div>
   </div>
 
-  <!-- JavaScript -->
   <script>
     /**********************
      * Global Variables & Initialisatie
@@ -441,180 +397,165 @@
     /**********************
      * Productcategorieën laden
      **********************/
-     function loadProducts() {
-  const container = document.getElementById("products");
-  container.innerHTML = "";
+    function loadProducts() {
+      const container = document.getElementById("products");
+      container.innerHTML = "";
 
-  // Voeg producten toe
-  productCategories.forEach(category => {
-    let div = document.createElement("div");
-    div.className = "product";
-    div.dataset.key = category.key;
-    
-    // Label element
-    let label = document.createElement("div");
-    label.textContent = category.label;
-    div.appendChild(label);
-    
-    // SVG voor de productbarcode
-    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.id = "product-barcode-" + category.key;
-    svg.style.display = "block";
-    svg.style.margin = "5px auto 0";
-    div.appendChild(svg);
-    JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
+      // Voeg producten toe
+      productCategories.forEach(category => {
+        let div = document.createElement("div");
+        div.className = "product";
+        div.dataset.key = category.key;
+        
+        // Label element
+        let label = document.createElement("div");
+        label.textContent = category.label;
+        div.appendChild(label);
+        
+        // SVG voor de productbarcode
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "product-barcode-" + category.key;
+        svg.style.display = "block";
+        svg.style.margin = "5px auto 0";
+        div.appendChild(svg);
+        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
 
-    // Klik-event: verhoog teller
-    div.addEventListener("click", function() {
-      let count = selectedCounts[category.key] || 0;
-      count++;
-      selectedCounts[category.key] = count;
-      label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
-      div.classList.add("selected");
-    });
-
-    // Rechterklik: verlaag teller
-    div.addEventListener("contextmenu", function(e) {
-      e.preventDefault();
-      let count = selectedCounts[category.key] || 0;
-      if (count > 0) {
-        count--;
-        if (count === 0) {
-          delete selectedCounts[category.key];
-          label.textContent = category.label;
-          div.classList.remove("selected");
-        } else {
+        // Klik-event: verhoog teller
+        div.addEventListener("click", function() {
+          let count = selectedCounts[category.key] || 0;
+          count++;
           selectedCounts[category.key] = count;
-          label.textContent = category.label + " (" + count + ")";
-        }
-      }
-    });
+          label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
+          div.classList.add("selected");
+        });
 
-    container.appendChild(div);
-  });
+        // Rechterklik: verlaag teller
+        div.addEventListener("contextmenu", function(e) {
+          e.preventDefault();
+          let count = selectedCounts[category.key] || 0;
+          if (count > 0) {
+            count--;
+            if (count === 0) {
+              delete selectedCounts[category.key];
+              label.textContent = category.label;
+              div.classList.remove("selected");
+            } else {
+              selectedCounts[category.key] = count;
+              label.textContent = category.label + " (" + count + ")";
+            }
+          }
+        });
 
-  // Voeg de aankoopbarcode toe als een apart product-item
-  let confirmDiv = document.createElement("div");
-  confirmDiv.className = "product";
-  confirmDiv.style.border = "2px solid red"; // Maak deze duidelijk zichtbaar
-  confirmDiv.style.backgroundColor = "#ffdddd";
-  confirmDiv.dataset.key = "confirmPurchase";
+        container.appendChild(div);
+      });
 
-  let confirmLabel = document.createElement("div");
-  confirmLabel.textContent = "Bevestig Aankoop";
-  confirmDiv.appendChild(confirmLabel);
+      // Voeg de aankoopbarcode toe als apart product-item
+      let confirmDiv = document.createElement("div");
+      confirmDiv.className = "product";
+      confirmDiv.style.border = "2px solid red";
+      confirmDiv.style.backgroundColor = "#ffdddd";
+      confirmDiv.dataset.key = "confirmPurchase";
 
-  // SVG voor de bevestigingsbarcode
-  let confirmSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  confirmSvg.id = "confirm-purchase-barcode";
-  confirmSvg.style.display = "block";
-  confirmSvg.style.margin = "5px auto 0";
-  confirmDiv.appendChild(confirmSvg);
+      let confirmLabel = document.createElement("div");
+      confirmLabel.textContent = "Bevestig Aankoop";
+      confirmDiv.appendChild(confirmLabel);
 
-  JsBarcode(confirmSvg, confirmPurchaseBarcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+      let confirmSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      confirmSvg.id = "confirm-purchase-barcode";
+      confirmSvg.style.display = "block";
+      confirmSvg.style.margin = "5px auto 0";
+      confirmDiv.appendChild(confirmSvg);
 
-  // Klik-event voor aankoopbevestiging
-  confirmDiv.addEventListener("click", function() {
-    confirmPurchase();
-  });
+      JsBarcode(confirmSvg, confirmPurchaseBarcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
 
-  container.appendChild(confirmDiv);
-}
+      confirmDiv.addEventListener("click", function() {
+        confirmPurchase();
+      });
+
+      container.appendChild(confirmDiv);
+    }
 
     function updateOverzicht() {
-  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-  let users = Object.keys(purchases).map(user => {
-    let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
-    return { user, totalSpent };
-  });
-  users.sort((a, b) => b.totalSpent - a.totalSpent);
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let users = Object.keys(userBarcodes); // Toon alle gebruikers, ook zonder aankopen
 
-  let html = "<table>";
-  html += "<tr><th>Gebruiker</th><th>Barcode</th>";
+      let html = "<table>";
+      html += "<tr><th>Gebruiker</th><th>Barcode</th>";
+      productCategories.forEach(product => {
+        html += `<th>${product.label}</th>`;
+      });
+      html += "<th>Totaal (€)</th></tr>";
 
-  productCategories.forEach(product => {
-    html += `<th>${product.label}</th>`;
-  });
+      users.forEach(user => {
+        let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
+        html += `<tr><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
+        productCategories.forEach(product => {
+          let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
+          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
+        });
+        html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
+      });
+      html += "</table>";
+      document.getElementById("Overzicht").innerHTML = html;
 
-  html += "<th>Totaal (€)</th></tr>";
-
-  users.forEach(({ user, totalSpent }) => {
-    html += `<tr><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
-
-    productCategories.forEach(product => {
-      let count = purchases[user].filter(p => p.category === product.key).length;
-      html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
-    });
-
-    html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
-  });
-
-  html += "</table>";
-  document.getElementById("Overzicht").innerHTML = html;
-
-  // Voeg barcodes toe aan de tabel
-  users.forEach(({ user }) => {
-    let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
-    if (svg && userBarcodes[user]) {
-      JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
+      // Voeg barcodes toe
+      users.forEach(user => {
+        let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
+        if (svg && userBarcodes[user]) {
+          JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
+        }
+      });
     }
-  });
-}
 
+    function confirmPurchase() {
+      if (!currentUser) { 
+        showNotification("Selecteer eerst een gebruiker.", "error"); 
+        return; 
+      }
+      if (Object.keys(selectedCounts).length === 0) { 
+        showNotification("Kies minstens één categorie!", "error"); 
+        return; 
+      }
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[currentUser]) { 
+        purchases[currentUser] = []; 
+      }
+      for (let [catKey, count] of Object.entries(selectedCounts)) {
+        let category = productCategories.find(c => c.key === catKey);
+        for (let i = 0; i < count; i++) {
+          let purchase = { 
+            name: category.label, 
+            price: category.defaultPrice,
+            category: category.key,
+            timestamp: new Date().toISOString() 
+          };
+          purchases[currentUser].push(purchase);
+        }
+      }
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateOverzicht();
+      showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
 
-function confirmPurchase() {
-  if (!currentUser) { 
-    showNotification("Selecteer eerst een gebruiker.", "error"); 
-    return; 
-  }
-  if (Object.keys(selectedCounts).length === 0) { 
-    showNotification("Kies minstens één categorie!", "error"); 
-    return; 
-  }
+      // Reset selectie
+      selectedCounts = {};
+      document.querySelectorAll(".product").forEach(el => {
+        let key = el.dataset.key;
+        let cat = productCategories.find(c => c.key === key);
+        if (cat) { el.firstChild.textContent = cat.label; }
+        el.classList.remove("selected");
+      });
 
-  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-  if (!purchases[currentUser]) { 
-    purchases[currentUser] = []; 
-  }
-
-  for (let [catKey, count] of Object.entries(selectedCounts)) {
-    let category = productCategories.find(c => c.key === catKey);
-    for (let i = 0; i < count; i++) {
-      let purchase = { 
-        name: category.label, 
-        price: category.defaultPrice,
-        category: category.key,
-        timestamp: new Date().toISOString() 
-      };
-      purchases[currentUser].push(purchase);
+      // Pagina verversen na aankoop
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
     }
-  }
-
-  localStorage.setItem("purchases", JSON.stringify(purchases));
-  updateOverzicht();
-  showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
-
-  // Reset de geselecteerde producten
-  selectedCounts = {};
-  document.querySelectorAll(".product").forEach(el => {
-    let key = el.dataset.key;
-    let cat = productCategories.find(c => c.key === key);
-    if (cat) { el.firstChild.textContent = cat.label; }
-    el.classList.remove("selected");
-  });
-
-  // **Pagina automatisch verversen na aankoop**
-  setTimeout(() => {
-    location.reload();
-  }, 1000); // Wacht 1 seconde voor een betere gebruikerservaring
-}
-
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
       if (!scannedValue) return;
       
-      // Eerst: check of barcode bij een gebruiker hoort
+      // Check voor gebruiker
       let foundUser = null;
       for (const [name, code] of Object.entries(userBarcodes)) {
         if (code === scannedValue) { foundUser = name; break; }
@@ -626,7 +567,7 @@ function confirmPurchase() {
         return;
       }
       
-      // Controleer of het de bevestigingsbarcode is
+      // Check voor bevestigingsbarcode
       if (scannedValue === confirmPurchaseBarcode) {
         if (!currentUser) { showNotification("Geen gebruiker geselecteerd.", "error"); }
         else { confirmPurchase(); }
@@ -634,7 +575,7 @@ function confirmPurchase() {
         return;
       }
       
-      // Check of barcode bij een productcategorie hoort
+      // Check voor productcategorie
       let product = productCategories.find(p => p.barcode === scannedValue);
       if (product) {
         let productDivs = document.querySelectorAll(".product");
@@ -693,42 +634,59 @@ function confirmPurchase() {
       document.getElementById("inventoryDisplay").innerHTML = html;
     }
 
+    function updateInventoryOverview() {
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
+      productCategories.forEach(cat => {
+        let catKey = cat.key;
+        let items = (inventory[catKey] || []).join(", ");
+        html += `<tr>
+                  <td>${cat.label}</td>
+                  <td>${items || "Geen items"}</td>
+                </tr>`;
+      });
+      html += "</table>";
+      document.getElementById("inventoryOverview").innerHTML = html;
+    }
+
     function updateUserBarcodeDisplay() {
-  let container = document.getElementById("userBarcodeListMain");
-  container.innerHTML = ""; // Leeg de container eerst
-
-  for (const [user, code] of Object.entries(userBarcodes)) {
-    let wrapper = document.createElement("div");
-    wrapper.className = "barcode-item";
-
-    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.id = "user-barcode-" + user.replace(/\s/g, '');
-
-    let caption = document.createElement("div");
-    caption.textContent = user;
-
-    wrapper.appendChild(svg);
-    wrapper.appendChild(caption);
-    container.appendChild(wrapper);
-
-    // Barcode genereren
-    JsBarcode(svg, code, { format: "CODE128", displayValue: false, width: 1, height: 30 });
-  }
-}
-
-
+      let container = document.getElementById("userBarcodeList");
+      container.innerHTML = "";
+      for (const [user, code] of Object.entries(userBarcodes)) {
+        let wrapper = document.createElement("div");
+        wrapper.className = "barcode-item";
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "user-barcode-" + user.replace(/\s/g, '');
+        let caption = document.createElement("div");
+        caption.textContent = user;
+        wrapper.appendChild(svg);
+        wrapper.appendChild(caption);
+        container.appendChild(wrapper);
+        JsBarcode(svg, code, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+      }
+    }
 
     // Nieuwe gebruiker toevoegen
     function addNewUserFromInput() {
       let newUser = document.getElementById("newUserName").value.trim();
-      if (!newUser) { showNotification("Voer een naam in voor de nieuwe klant.", "error"); return; }
-      if (userBarcodes[newUser]) { showNotification("Gebruiker bestaat al.", "error"); return; }
+      if (!newUser) { 
+        showNotification("Voer een naam in voor de nieuwe klant.", "error"); 
+        return; 
+      }
+      if (userBarcodes[newUser]) { 
+        showNotification("Gebruiker bestaat al.", "error"); 
+        return; 
+      }
       let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
       userBarcodes[newUser] = newUserBarcode;
       localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      purchases[newUser] = [];
+      localStorage.setItem("purchases", JSON.stringify(purchases));
       currentUser = newUser;
-      showNotification(`Nieuwe gebruiker toegevoegd: ${newUser}`, "success");
+      showNotification(`Nieuwe gebruiker toegevoegd: ${newUser} en automatisch geselecteerd`, "success");
       document.getElementById("newUserName").value = "";
+      updateOverzicht();
       updateUserBarcodeDisplay();
     }
 
@@ -793,6 +751,8 @@ function confirmPurchase() {
       loadProducts();
       updateOverzicht();
       updateInventoryDisplay();
+      updateInventoryOverview();
+      updateInventoryCategoryOptions();
     }
     function deleteProduct(index) {
       if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
@@ -803,6 +763,8 @@ function confirmPurchase() {
         loadProducts();
         updateOverzicht();
         updateInventoryDisplay();
+        updateInventoryOverview();
+        updateInventoryCategoryOptions();
       }
     }
     function updateBarcodeListModal() {
@@ -818,7 +780,6 @@ function confirmPurchase() {
         caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
         wrapper.appendChild(caption);
         container.appendChild(wrapper);
-        // Kleiner gemaakte barcode-instellingen voor producten
         JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
       });
     }
@@ -836,6 +797,9 @@ function confirmPurchase() {
       document.getElementById("grid-container").style.display = "none";
       document.getElementById("adminView").style.display = "block";
       updateAdminContent();
+      updateInventoryOverview();
+      updateInventoryCategoryOptions();
+      updateUserBarcodeDisplay();
     }
     function hideAdminOverview() {
       document.getElementById("adminView").style.display = "none";
@@ -859,12 +823,10 @@ function confirmPurchase() {
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-      
       let html = "<table>";
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
       html += "<th>Totaal</th><th>Acties</th></tr>";
-      
       users.forEach(({user, totalSpent}) => {
         html += `<tr><td>${user}</td>`;
         productCategories.forEach(product => {
@@ -939,14 +901,58 @@ function confirmPurchase() {
         showNotification(`Alle aankopen van ${username} zijn verwijderd.`, "success");
       }
     }
+    function removePurchase() {
+      if (!currentUser) {
+        showNotification("Geen gebruiker geselecteerd.", "error");
+        return;
+      }
+      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      if (!purchases[currentUser] || purchases[currentUser].length === 0) {
+        showNotification("Geen aankopen om te verwijderen.", "error");
+        return;
+      }
+      purchases[currentUser].pop();
+      localStorage.setItem("purchases", JSON.stringify(purchases));
+      updateOverzicht();
+      showNotification("Laatste aankoop verwijderd.", "success");
+    }
+    function addInventoryItem() {
+      let categorySelect = document.getElementById("inventoryCategory");
+      let category = categorySelect.value;
+      let itemName = document.getElementById("inventoryItem").value.trim();
+      if (!category || !itemName) {
+        showNotification("Selecteer een categorie en voer een item naam in.", "error");
+        return;
+      }
+      let inventory = JSON.parse(localStorage.getItem("inventory"));
+      if (!inventory[category]) {
+        inventory[category] = [];
+      }
+      inventory[category].push(itemName);
+      localStorage.setItem("inventory", JSON.stringify(inventory));
+      updateInventoryDisplay();
+      updateInventoryOverview();
+      showNotification(`Item ${itemName} toegevoegd aan ${category}.`, "success");
+      document.getElementById("inventoryItem").value = "";
+    }
+    function updateInventoryCategoryOptions() {
+      let select = document.getElementById("inventoryCategory");
+      select.innerHTML = "";
+      productCategories.forEach(cat => {
+        let option = document.createElement("option");
+        option.value = cat.key;
+        option.textContent = cat.label;
+        select.appendChild(option);
+      });
+    }
 
     window.addEventListener("load", () => {
-      // Focus op barcode input
       document.getElementById("barcodeInput").focus();
       loadProducts();
       updateOverzicht();
       updateInventoryDisplay();
       updateUserBarcodeDisplay();
+      updateInventoryCategoryOptions();
     });
   </script>
 </body>

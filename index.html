@@ -78,8 +78,8 @@
     }
     /* Extra tekstregel onder de Categorieën titel */
     .categories p.extra-text {
-      font-size: 14px;
-      color: #66ff00;
+      font-size: 20px;
+      color: #48ff00;
       margin-top: 5px;
     }
     .barcode-scan-container {
@@ -242,6 +242,9 @@
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      /* Maak het admin menu wat kleiner (uitgezoomd) */
+      transform: scale(0.9);
+      transform-origin: top center;
     }
     .admin-section {
       margin-top: 20px;
@@ -514,7 +517,6 @@
 
       // Bereken totaal uitgegeven in de winkel
       let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
-      html += `<p style="font-weight: bold; margin-top: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
 
       document.getElementById("Overzicht").innerHTML = html;
 
@@ -839,12 +841,15 @@
     }
     function updateAdminContent() {
       let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+      let overallTotal = 0;
       let users = Object.keys(purchases).map(user => {
         let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+        overallTotal += totalSpent;
         return { user, totalSpent };
       });
       users.sort((a, b) => b.totalSpent - a.totalSpent);
-      let html = "<table>";
+      let html = `<p style="font-weight: bold; margin-bottom: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
+      html += "<table>";
       html += "<tr><th>Gebruiker</th>";
       productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
       html += "<th>Totaal</th><th>Acties</th></tr>";

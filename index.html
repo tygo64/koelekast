@@ -76,6 +76,12 @@
     .categories h2 {
       margin-top: 0;
     }
+    /* Extra tekstregel onder de Categorieën titel */
+    .categories p.extra-text {
+      font-size: 14px;
+      color: #555;
+      margin-top: 5px;
+    }
     .barcode-scan-container {
       margin-bottom: 15px;
       text-align: center;
@@ -262,6 +268,7 @@
     <!-- Categorieën -->
     <div class="categories">
       <h2>Categorieën</h2>
+      <p class="extra-text">Doeg ie et nie? Effe refreshen dan kunnen wij cashen</p>
       <div class="barcode-scan-container">
         <label for="barcodeInput">Scan Barcode:</label>
         <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
@@ -504,6 +511,11 @@
         html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
       });
       html += "</table>";
+
+      // Bereken totaal uitgegeven in de winkel
+      let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
+      html += `<p style="font-weight: bold; margin-top: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
+
       document.getElementById("Overzicht").innerHTML = html;
 
       // Voeg barcodes toe
@@ -684,7 +696,7 @@
       }
       if (userBarcodes[newUser]) { 
         showNotification("Gebruiker bestaat al.", "error"); 
-        return; 
+        return;
       }
       let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
       userBarcodes[newUser] = newUserBarcode;

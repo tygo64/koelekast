@@ -78,8 +78,8 @@
     }
     /* Extra tekstregel onder de Categorieën titel */
     .categories p.extra-text {
-      font-size: 20px;
-      color: #48ff00;
+      font-size: 14px;
+      color: #555;
       margin-top: 5px;
     }
     .barcode-scan-container {
@@ -271,7 +271,7 @@
     <!-- Categorieën -->
     <div class="categories">
       <h2>Categorieën</h2>
-      <p class="extra-text">Doeg ie et nie? Effe refreshen dan kunnen wij cashen (f5)</p>
+      <p class="extra-text">Doeg ie et nie? Effe refreshen dan kunnen wij cashen</p>
       <div class="barcode-scan-container">
         <label for="barcodeInput">Scan Barcode:</label>
         <input type="text" id="barcodeInput" placeholder="Scan hier barcode" autofocus />
@@ -503,10 +503,29 @@
       });
       html += "<th>Totaal (€)</th></tr>";
 
-      usersArray.forEach(({user, totalSpent}) => {
-        // Als de gebruiker de huidige is, geef de rij een groene achtergrond
-        let rowStyle = (user === currentUser) ? 'style="background-color: lightgreen;"' : "";
-        html += `<tr ${rowStyle}><td>${user}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
+      // Loop met index voor de ranking
+      usersArray.forEach((userObj, index) => {
+        let { user, totalSpent } = userObj;
+        let medalLabel = "";
+        let backgroundColor = "";
+        if (index === 0) {
+          medalLabel = "Big Spender";
+          backgroundColor = "#FFD700"; // goud
+        } else if (index === 1) {
+          medalLabel = "Baller";
+          backgroundColor = "#C0C0C0"; // zilver
+        } else if (index === 2) {
+          medalLabel = "Mid";
+          backgroundColor = "#CD7F32"; // brons
+        }
+        // Als de gebruiker de huidige is, overschrijf dan met groen
+        let rowStyle = (user === currentUser) ? 'style="background-color: lightgreen;"' 
+                      : (backgroundColor ? `style="background-color: ${backgroundColor};"` : "");
+        // Voeg de naam en (indien top 3) de medal label toe
+        let userCell = medalLabel 
+          ? `${user}<br/><span style="font-size: 12px; font-style: italic;">${medalLabel}</span>` 
+          : user;
+        html += `<tr ${rowStyle}><td>${userCell}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
         productCategories.forEach(product => {
           let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
           html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
@@ -515,8 +534,9 @@
       });
       html += "</table>";
 
-      // Bereken totaal uitgegeven in de winkel
+      // Bereken totaal uitgegeven in de winkel (over alle gebruikers)
       let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
+      html += `<p style="font-weight: bold; margin-top: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
 
       document.getElementById("Overzicht").innerHTML = html;
 

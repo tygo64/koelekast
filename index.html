@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Koelkast Shop</title>
+  <title>Go Go Koelkast</title>
   <!-- Speels lettertype -->
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <!-- JsBarcode Library voor barcode genereren -->
@@ -78,8 +78,8 @@
     }
     /* Extra tekstregel onder de Categorieën titel */
     .categories p.extra-text {
-      font-size: 14px;
-      color: #555;
+      font-size: 20px;
+      color: #51ff00;
       margin-top: 5px;
     }
     .barcode-scan-container {
@@ -536,7 +536,6 @@
 
       // Bereken totaal uitgegeven in de winkel (over alle gebruikers)
       let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
-      html += `<p style="font-weight: bold; margin-top: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
 
       document.getElementById("Overzicht").innerHTML = html;
 

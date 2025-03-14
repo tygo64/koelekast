@@ -588,6 +588,8 @@
 
   for (let [catKey, count] of Object.entries(selectedCounts)) {
     let category = productCategories.find(c => c.key === catKey);
+    if (!category) continue; // Sla over als de categorie niet bestaat
+
     for (let i = 0; i < count; i++) {
       let purchase = { 
         name: category.label, 
@@ -609,15 +611,19 @@
   // Bereken totaaluitgaven van de gebruiker (voor andere achievements)
   let totalSpent = purchases[currentUser].reduce((sum, p) => sum + p.price, 0);
   let totalPurchases = purchases[currentUser].length;
-  
-  // Check voor achievements, met de juiste totalen
+
+  // **Check voor achievements**
   checkAchievements(currentUser, totalSpent, purchases[currentUser]);
 
-  // Update UI
-  updateOverzicht();
+  // **Update UI zonder refresh**
+  updateOverzicht(); // Update de ranglijst en totaaluitgaven
+  updateInventoryDisplay(); // Vernieuw voorraad
+  updateUserBarcodeDisplay(); // Vernieuw gebruikerslijst
+  loadProducts(); // Vernieuw productweergave
+
   showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
 
-  // Reset de selectie en herstel de knoplabels
+  // **Reset de selectie en labels**
   selectedCounts = {};
   document.querySelectorAll(".product").forEach(el => {
     let key = el.dataset.key;
@@ -626,12 +632,13 @@
     el.classList.remove("selected");
   });
 
-  // Wis de barcode input en zet focus erna met een korte vertraging
+  // **Wis de barcode input en zet focus erna met een korte vertraging**
   document.getElementById("barcodeInput").value = "";
   setTimeout(() => {
     document.getElementById("barcodeInput").focus();
   }, 50);
 }
+
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
@@ -1128,11 +1135,12 @@ function addInventoryItem() {
   description: "??? (Hidden Achievement)" 
 },
   "Smaakverkenner": { 
-    condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, 
-    icon: "🏅", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
+  condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, 
+  icon: "🏅", 
+  hidden: true,
+  description: "??? (Hidden Achievement)" 
+},
+
   "De Spijtoptant": { 
     condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, 
     icon: "❌", 
@@ -1153,10 +1161,6 @@ function addInventoryItem() {
   }
 };
 
-
-
-
-
 // Behaalde achievements opslaan in localStorage
 let userAchievements = JSON.parse(localStorage.getItem("userAchievements")) || {};
 
@@ -1169,12 +1173,23 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
     userAchievements[user] = [];
   }
 
+  // 🛠️ **Fix: Zorg ervoor dat `uniqueItems` altijd correct berekend wordt**
+  let uniqueItems = new Set(userPurchases.map(p => p.category)); // Set van unieke categorieën
+
   let achievementQueue = [];
 
   for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
-    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, totalUserSpent)) {
-      userAchievements[user].push(achievement);
-      achievementQueue.push({ title: `${icon} ${achievement}`, message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` });
+    try {
+      if (!userAchievements[user].includes(achievement) && 
+          condition(totalSpent, userPurchases, totalUserSpent, undefined, undefined, uniqueItems)) {
+        userAchievements[user].push(achievement);
+        achievementQueue.push({ 
+          title: `${icon} ${achievement}`, 
+          message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` 
+        });
+      }
+    } catch (error) {
+      console.error(`Fout in achievement '${achievement}':`, error);
     }
   }
 
@@ -1184,6 +1199,7 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
     setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
   });
 }
+
 
 
 

@@ -568,76 +568,107 @@
       });
     }
 
-    function confirmPurchase() {
-  if (!currentUser) { 
-    showNotification("Selecteer eerst een gebruiker.", "error"); 
-    return; 
-  }
-  if (Object.keys(selectedCounts).length === 0) { 
-    showNotification("Kies minstens één product!", "error"); 
-    return; 
-  }
-
-  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-  if (!purchases[currentUser]) { 
-    purchases[currentUser] = []; 
-  }
-
-  let purchaseList = []; // Om de aankooplijst bij te houden voor achievements
-  let totalPurchaseAmount = 0; // Variabele om totaalbedrag van deze aankoop te berekenen
-
-  for (let [catKey, count] of Object.entries(selectedCounts)) {
-    let category = productCategories.find(c => c.key === catKey);
-    if (!category) continue; // Sla over als de categorie niet bestaat
-
-    for (let i = 0; i < count; i++) {
-      let purchase = { 
-        name: category.label, 
-        price: category.defaultPrice,
-        category: category.key,
-        timestamp: new Date().toISOString()
-      };
-      purchases[currentUser].push(purchase);
-      purchaseList.push(purchase);
-      totalPurchaseAmount += category.defaultPrice; // Tel prijs op bij totaalbedrag
+    function updateTotalSpent(user, amount) {
+    // Haal de bestaande aankopen op uit localStorage
+    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+    
+    // Controleer of de gebruiker al aankopen heeft, zo niet, maak een nieuwe lijst
+    if (!purchases[user]) {
+        purchases[user] = [];
     }
-  }
 
-  localStorage.setItem("purchases", JSON.stringify(purchases));
+    // Bereken het totale bedrag van de gebruiker door alle prijzen op te tellen
+    let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
 
-  // **Update het totale uitgegeven bedrag van de gebruiker**
-  let newTotalSpent = updateTotalSpent(currentUser, totalPurchaseAmount);
+    // Voeg het nieuwe aankoopbedrag toe aan het totale bedrag
+    totalSpent += amount;
 
-  // Bereken totaaluitgaven van de gebruiker (voor andere achievements)
-  let totalSpent = purchases[currentUser].reduce((sum, p) => sum + p.price, 0);
-  let totalPurchases = purchases[currentUser].length;
+    // Sla de bijgewerkte aankopen op in localStorage
+    localStorage.setItem("purchases", JSON.stringify(purchases));
 
-  // **Check voor achievements**
-  checkAchievements(currentUser, totalSpent, purchases[currentUser]);
-
-  // **Update UI zonder refresh**
-  updateOverzicht(); // Update de ranglijst en totaaluitgaven
-  updateInventoryDisplay(); // Vernieuw voorraad
-  updateUserBarcodeDisplay(); // Vernieuw gebruikerslijst
-  loadProducts(); // Vernieuw productweergave
-
-  showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
-
-  // **Reset de selectie en labels**
-  selectedCounts = {};
-  document.querySelectorAll(".product").forEach(el => {
-    let key = el.dataset.key;
-    let cat = productCategories.find(c => c.key === key);
-    if (cat) { el.firstChild.textContent = cat.label; }
-    el.classList.remove("selected");
-  });
-
-  // **Wis de barcode input en zet focus erna met een korte vertraging**
-  document.getElementById("barcodeInput").value = "";
-  setTimeout(() => {
-    document.getElementById("barcodeInput").focus();
-  }, 50);
+    // Retourneer het nieuwe totaalbedrag
+    return totalSpent;
 }
+
+    
+function confirmPurchase() {
+    if (!currentUser) { 
+        showNotification("Selecteer eerst een gebruiker.", "error"); 
+        return; 
+    }
+
+    // Check of er producten zijn geselecteerd
+    let emptyPurchase = Object.keys(selectedCounts).length === 0;
+
+    if (emptyPurchase) { 
+        showNotification("Je hebt niets aangeslagen, maar toch bevestigd!", "warning"); 
+    }
+
+    // Laad bestaande aankopen
+    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+    
+    // Zorg dat de gebruiker een aankooplijst heeft
+    if (!purchases[currentUser]) { 
+        purchases[currentUser] = []; 
+    }
+
+    let purchaseList = []; // Om de aankooplijst bij te houden voor achievements
+    let totalPurchaseAmount = 0; // Variabele om totaalbedrag van deze aankoop te berekenen
+
+    if (!emptyPurchase) {
+        // Loop door alle geselecteerde producten en voeg ze toe aan de aankopen
+        for (let [catKey, count] of Object.entries(selectedCounts)) {
+            let category = productCategories.find(c => c.key === catKey);
+            if (!category) continue; // Sla over als de categorie niet bestaat
+
+            for (let i = 0; i < count; i++) {
+                let purchase = { 
+                    name: category.label, 
+                    price: category.defaultPrice,
+                    category: category.key,
+                    timestamp: new Date().toISOString()
+                };
+                purchases[currentUser].push(purchase);
+                purchaseList.push(purchase);
+                totalPurchaseAmount += category.defaultPrice; // Tel prijs op bij totaalbedrag
+            }
+        }
+    }
+
+    // Sla de bijgewerkte aankopen op in localStorage
+    localStorage.setItem("purchases", JSON.stringify(purchases));
+
+    // **Update het totale uitgegeven bedrag van de gebruiker**
+    let totalSpent = updateTotalSpent(currentUser, totalPurchaseAmount);
+
+    // **Check voor achievements, inclusief 'De Omgekeerde Wereld'**
+    checkAchievements(currentUser, totalSpent, purchases[currentUser], false, emptyPurchase);
+
+    // **Update UI zonder refresh**
+    updateOverzicht(); // Update de ranglijst en totaaluitgaven
+    updateInventoryDisplay(); // Vernieuw voorraad
+    updateUserBarcodeDisplay(); // Vernieuw gebruikerslijst
+    loadProducts(); // Vernieuw productweergave
+
+    showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
+
+    // **Reset de selectie en labels**
+    selectedCounts = {};
+    document.querySelectorAll(".product").forEach(el => {
+        let key = el.dataset.key;
+        let cat = productCategories.find(c => c.key === key);
+        if (cat) { el.firstChild.textContent = cat.label; }
+        el.classList.remove("selected");
+    });
+
+    // **Wis de barcode input en zet focus erna met een korte vertraging**
+    document.getElementById("barcodeInput").value = "";
+    setTimeout(() => {
+        document.getElementById("barcodeInput").focus();
+    }, 50);
+}
+
+
 
 
     function handleBarcodeScan() {
@@ -1027,6 +1058,7 @@
         showNotification(`Alle aankopen van ${user} zijn verwijderd.`, "success");
       }
     }
+    
     function removePurchase() {
   if (!currentUser) {
     showNotification("Geen gebruiker geselecteerd.", "error");
@@ -1045,12 +1077,13 @@
   // Markeer als een verwijderde aankoop
   let removedPurchase = true;
 
-  // Update achievements
+  // Update achievements MET removedPurchase-check
   checkAchievements(currentUser, purchases[currentUser].reduce((sum, p) => sum + p.price, 0), purchases[currentUser], removedPurchase);
 
   updateOverzicht();
   showNotification("Laatste aankoop verwijderd.", "success");
 }
+
 
 function addInventoryItem() {
       let categorySelect = document.getElementById("inventoryCategory");
@@ -1091,121 +1124,115 @@ function addInventoryItem() {
       updateInventoryCategoryOptions();
     });
 
-    let achievementsList = {
-  // 🔹 Openbare Achievements (zichtbaar voor iedereen)
+    // 🏆 **Achievements Lijst** 🏆
+let achievementsList = {
   "Big Spender": { 
-    condition: (total) => total >= 50, 
+    condition: (totalSpent) => totalSpent >= 50, 
     icon: "🏆", 
     hidden: false,
     description: "Geef in totaal €50 of meer uit." 
   },
   "Kleine Belegger": { 
-    condition: (total) => total >= 10, 
+    condition: (totalSpent) => totalSpent >= 10, 
     icon: "💰", 
     hidden: false,
     description: "Geef in totaal €10 of meer uit." 
   },
   "Combinatie King": { 
-    condition: (_, purchaseList) => {
-      let uniqueCategories = new Set(purchaseList.map(p => p.category));
-      return uniqueCategories.size >= 3; // Vereist 3 verschillende productcategorieën
+    condition: (_, purchases) => {
+      let uniqueCategories = new Set(purchases.map(p => p.category));
+      return uniqueCategories.size >= 3;
     },
     icon: "🔁", 
     hidden: false,
     description: "Koop 3 verschillende producten in één aankoop." 
   },
   "High Roller": { 
-  condition: (_, __, userTotalSpent) => userTotalSpent >= 100, 
-  icon: "🥇", 
-  hidden: false,
-  description: "Geef in totaal €100 of meer uit." 
-},
+    condition: (totalSpent) => totalSpent >= 100, 
+    icon: "🥇", 
+    hidden: false,
+    description: "Geef in totaal €100 of meer uit." 
+  },
   "Vaste Klant": { 
-    condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, 
+    condition: (_, __, daysPurchased) => daysPurchased.size >= 3, 
     icon: "📅", 
     hidden: false,
     description: "Koop iets op 3 verschillende dagen." 
   },
-
-  // 🔹 Verborgen Achievements (worden pas onthuld na behalen)
   "De Koelkast Koning": { 
-  condition: (_, __, userTotalSpent) => userTotalSpent >= 250, 
-  icon: "🏴‍☠️", 
-  hidden: true,
-  description: "??? (Hidden Achievement)" 
-},
+    condition: (totalSpent) => totalSpent >= 250, 
+    icon: "🏴‍☠️", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
   "Smaakverkenner": { 
-  condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, 
-  icon: "🏅", 
-  hidden: true,
-  description: "??? (Hidden Achievement)" 
-},
-
+    condition: (_, purchases) => {
+      let uniqueItems = new Set(purchases.map(p => p.name));
+      return uniqueItems.size >= productCategories.length;
+    }, 
+    icon: "🏅", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
   "De Spijtoptant": { 
-    condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, 
+    condition: (_, __, ___, removedPurchase) => removedPurchase, 
     icon: "❌", 
     hidden: true,
     description: "??? (Hidden Achievement)" 
   },
   "De Omgekeerde Wereld": { 
-    condition: (total, purchaseList) => total === 0 && purchaseList.length > 0, 
+    condition: (_, __, ___, ____, emptyPurchase) => emptyPurchase, 
     icon: "🔄", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
+    hidden: false,
+    description: "Scan de bevestigingsbarcode zonder iets aan te slaan." 
+},
   "Betaald met Interesse": { 
     condition: (_, __, ___, ____, firstOfDay) => firstOfDay, 
     icon: "🎖", 
     hidden: true,
     description: "??? (Hidden Achievement)" 
   }
+
 };
 
-// Behaalde achievements opslaan in localStorage
+// 🏆 **Behaalde Achievements Opslaan in localStorage** 🏆
 let userAchievements = JSON.parse(localStorage.getItem("userAchievements")) || {};
 
-function checkAchievements(user, totalSpent, purchaseList, removedPurchase = false) {
-  let userPurchases = purchaseList || [];
-  let userTotalSpent = JSON.parse(localStorage.getItem("userTotalSpent")) || {};
-  let totalUserSpent = userTotalSpent[user] || 0; // Haal het totaal uitgegeven bedrag op
+function checkAchievements(user, totalSpent, purchaseList, removedPurchase = false, emptyPurchase = false) {
+    let userPurchases = purchaseList || [];
+    
+    let daysPurchased = new Set(userPurchases.map(p => new Date(p.timestamp).toDateString()));
 
-  if (!userAchievements[user]) {
-    userAchievements[user] = [];
-  }
-
-  // 🛠️ **Fix: Zorg ervoor dat `uniqueItems` altijd correct berekend wordt**
-  let uniqueItems = new Set(userPurchases.map(p => p.category)); // Set van unieke categorieën
-
-  let achievementQueue = [];
-
-  for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
-    try {
-      if (!userAchievements[user].includes(achievement) && 
-          condition(totalSpent, userPurchases, totalUserSpent, undefined, undefined, uniqueItems)) {
-        userAchievements[user].push(achievement);
-        achievementQueue.push({ 
-          title: `${icon} ${achievement}`, 
-          message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` 
-        });
-      }
-    } catch (error) {
-      console.error(`Fout in achievement '${achievement}':`, error);
+    if (!userAchievements[user]) {
+        userAchievements[user] = [];
     }
-  }
 
-  localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
+    let achievementQueue = [];
 
-  achievementQueue.forEach((ach, index) => {
-    setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
-  });
+    for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
+        try {
+            if (!userAchievements[user].includes(achievement) && 
+                condition(totalSpent, userPurchases, daysPurchased, removedPurchase, emptyPurchase)) {
+                userAchievements[user].push(achievement);
+                achievementQueue.push({ 
+                    title: `${icon} ${achievement}`, 
+                    message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` 
+                });
+            }
+        } catch (error) {
+            console.error(`Fout in achievement '${achievement}':`, error);
+        }
+    }
+
+    localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
+
+    achievementQueue.forEach((ach, index) => {
+        setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
+    });
 }
 
 
-
-
-
-
-// Functie om een GROTE melding te tonen bij een nieuwe achievement
+// 🎉 **Pop-up voor Nieuw Achievement** 🎉
 function showBigAchievementPopup(title, message) {
   let popup = document.createElement("div");
   popup.style.position = "fixed";
@@ -1233,44 +1260,7 @@ function showBigAchievementPopup(title, message) {
   }, 3000);
 }
 
-// CSS Animatie toevoegen
-let style = document.createElement("style");
-style.innerHTML = `
-  @keyframes achievementFadeIn {
-    from { transform: translate(-50%, -60%); opacity: 0; }
-    to { transform: translate(-50%, -50%); opacity: 1; }
-  }
-  @keyframes achievementFadeOut {
-    from { transform: translate(-50%, -50%); opacity: 1; }
-    to { transform: translate(-50%, -60%); opacity: 0; }
-  }
-`;
-document.head.appendChild(style);
-
-
-// Laat achievements zien in de modal
-function showAchievements() {
-  if (!currentUser) {
-    showNotification("Geen gebruiker geselecteerd.", "error");
-    return;
-  }
-
-  let achievements = userAchievements[currentUser] || [];
-  let html = "<ul>";
-  achievements.forEach(a => {
-    html += `<li>${achievementsList[a].icon} ${a}</li>`;
-  });
-  html += "</ul>";
-
-  document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
-  document.getElementById("achievementModal").style.display = "block";
-}
-
-// Modal sluiten
-function closeAchievementModal() {
-  document.getElementById("achievementModal").style.display = "none";
-}
-
+// 🏅 **Toon Alle Achievements** 🏅
 function showAchievementList() {
   let html = `<h3 style="text-align:center;">🏅 Alle Mogelijke Achievements</h3>`;
   
@@ -1297,22 +1287,33 @@ function showAchievementList() {
   document.getElementById("achievementListModal").style.display = "block";
 }
 
+// 🏅 **Toon Behaalde Achievements van Huidige Gebruiker** 🏅
+function showAchievements() {
+  if (!currentUser) {
+    showNotification("Geen gebruiker geselecteerd.", "error");
+    return;
+  }
+
+  let achievements = userAchievements[currentUser] || [];
+  let html = "<ul>";
+  achievements.forEach(a => {
+    html += `<li>${achievementsList[a].icon} ${a}</li>`;
+  });
+  html += "</ul>";
+
+  document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
+  document.getElementById("achievementModal").style.display = "block";
+}
+
+// Modal sluiten
+function closeAchievementModal() {
+  document.getElementById("achievementModal").style.display = "none";
+}
+
 function closeAchievementListModal() {
   document.getElementById("achievementListModal").style.display = "none";
 }
 
-function updateTotalSpent(user, amount) {
-  let userTotalSpent = JSON.parse(localStorage.getItem("userTotalSpent")) || {};
-
-  if (!userTotalSpent[user]) {
-    userTotalSpent[user] = 0;
-  }
-
-  userTotalSpent[user] += amount; // Tel de nieuwe aankoop op bij het totaal
-  localStorage.setItem("userTotalSpent", JSON.stringify(userTotalSpent));
-
-  return userTotalSpent[user]; // Geef het totaal terug
-}
   </script>
 </body>
 </html>

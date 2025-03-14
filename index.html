@@ -1183,9 +1183,10 @@ let achievementsList = {
   "De Omgekeerde Wereld": { 
     condition: (_, __, ___, ____, emptyPurchase) => emptyPurchase, 
     icon: "🔄", 
-    hidden: false,
-    description: "Scan de bevestigingsbarcode zonder iets aan te slaan." 
+    hidden: true,  // 🔒 Verborgen totdat behaald
+    description: "??? (Hidden Achievement)" 
 },
+
   "Betaald met Interesse": { 
     condition: (_, __, ___, ____, firstOfDay) => firstOfDay, 
     icon: "🎖", 

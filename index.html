@@ -584,6 +584,7 @@
   }
 
   let purchaseList = []; // Om de aankooplijst bij te houden voor achievements
+  let totalPurchaseAmount = 0; // Variabele om totaalbedrag van deze aankoop te berekenen
 
   for (let [catKey, count] of Object.entries(selectedCounts)) {
     let category = productCategories.find(c => c.key === catKey);
@@ -595,17 +596,21 @@
         timestamp: new Date().toISOString()
       };
       purchases[currentUser].push(purchase);
-      purchaseList.push(purchase); // Voeg toe aan de lijst voor achievements
+      purchaseList.push(purchase);
+      totalPurchaseAmount += category.defaultPrice; // Tel prijs op bij totaalbedrag
     }
   }
 
   localStorage.setItem("purchases", JSON.stringify(purchases));
 
-  // Bereken totaaluitgaven van de gebruiker
+  // **Update het totale uitgegeven bedrag van de gebruiker**
+  let newTotalSpent = updateTotalSpent(currentUser, totalPurchaseAmount);
+
+  // Bereken totaaluitgaven van de gebruiker (voor andere achievements)
   let totalSpent = purchases[currentUser].reduce((sum, p) => sum + p.price, 0);
   let totalPurchases = purchases[currentUser].length;
   
-  // Check voor achievements
+  // Check voor achievements, met de juiste totalen
   checkAchievements(currentUser, totalSpent, purchases[currentUser]);
 
   // Update UI
@@ -627,7 +632,6 @@
     document.getElementById("barcodeInput").focus();
   }, 50);
 }
-
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
@@ -1104,11 +1108,11 @@ function addInventoryItem() {
     description: "Koop 3 verschillende producten in één aankoop." 
   },
   "High Roller": { 
-    condition: (total) => total >= 100, 
-    icon: "🥇", 
-    hidden: false,
-    description: "Geef in totaal €100 of meer uit." 
-  },
+  condition: (_, __, userTotalSpent) => userTotalSpent >= 100, 
+  icon: "🥇", 
+  hidden: false,
+  description: "Geef in totaal €100 of meer uit." 
+},
   "Vaste Klant": { 
     condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, 
     icon: "📅", 
@@ -1118,11 +1122,11 @@ function addInventoryItem() {
 
   // 🔹 Verborgen Achievements (worden pas onthuld na behalen)
   "De Koelkast Koning": { 
-    condition: (total) => total >= 250, 
-    icon: "🏴‍☠️", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
+  condition: (_, __, userTotalSpent) => userTotalSpent >= 250, 
+  icon: "🏴‍☠️", 
+  hidden: true,
+  description: "??? (Hidden Achievement)" 
+},
   "Smaakverkenner": { 
     condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, 
     icon: "🏅", 
@@ -1132,12 +1136,6 @@ function addInventoryItem() {
   "De Spijtoptant": { 
     condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, 
     icon: "❌", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
-  "De Gulle Gever": { 
-    condition: (_, purchaseList) => purchaseList.filter(p => p.price >= 10).length >= 3, 
-    icon: "🎁", 
     hidden: true,
     description: "??? (Hidden Achievement)" 
   },
@@ -1164,32 +1162,17 @@ let userAchievements = JSON.parse(localStorage.getItem("userAchievements")) || {
 
 function checkAchievements(user, totalSpent, purchaseList, removedPurchase = false) {
   let userPurchases = purchaseList || [];
-  
-  // Houd bij op welke dagen een gebruiker iets koopt
-  let userDays = JSON.parse(localStorage.getItem("userDays")) || {};
-  if (!userDays[user]) userDays[user] = new Set();
-  userDays[user].add(new Date().toDateString());
-  localStorage.setItem("userDays", JSON.stringify(userDays));
-
-  // Check of deze gebruiker de eerste koper van de dag is
-  let today = new Date().toDateString();
-  let firstBuyer = JSON.parse(localStorage.getItem("firstBuyer")) || {};
-  let firstOfDay = false;
-  
-  if (!firstBuyer[today]) {
-    firstBuyer[today] = user;
-    localStorage.setItem("firstBuyer", JSON.stringify(firstBuyer));
-    firstOfDay = true;
-  }
+  let userTotalSpent = JSON.parse(localStorage.getItem("userTotalSpent")) || {};
+  let totalUserSpent = userTotalSpent[user] || 0; // Haal het totaal uitgegeven bedrag op
 
   if (!userAchievements[user]) {
     userAchievements[user] = [];
   }
 
-  let achievementQueue = []; 
+  let achievementQueue = [];
 
   for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
-    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, 0, userPurchases.length, firstOfDay, userDays[user])) {
+    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, totalUserSpent)) {
       userAchievements[user].push(achievement);
       achievementQueue.push({ title: `${icon} ${achievement}`, message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` });
     }
@@ -1201,6 +1184,7 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
     setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
   });
 }
+
 
 
 
@@ -1301,9 +1285,18 @@ function closeAchievementListModal() {
   document.getElementById("achievementListModal").style.display = "none";
 }
 
+function updateTotalSpent(user, amount) {
+  let userTotalSpent = JSON.parse(localStorage.getItem("userTotalSpent")) || {};
 
+  if (!userTotalSpent[user]) {
+    userTotalSpent[user] = 0;
+  }
 
+  userTotalSpent[user] += amount; // Tel de nieuwe aankoop op bij het totaal
+  localStorage.setItem("userTotalSpent", JSON.stringify(userTotalSpent));
 
+  return userTotalSpent[user]; // Geef het totaal terug
+}
   </script>
 </body>
 </html>

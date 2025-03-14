@@ -249,6 +249,13 @@
     .admin-section {
       margin-top: 20px;
     }
+
+    @media (max-width: 600px) {
+  #allAchievementsContent div {
+    grid-template-columns: 1fr !important; /* Op mobiel wordt het 1 kolom */
+  }
+}
+
   </style>
 </head>
 <body>
@@ -567,7 +574,7 @@
     return; 
   }
   if (Object.keys(selectedCounts).length === 0) { 
-    showNotification("Kies minstens één categorie!", "error"); 
+    showNotification("Kies minstens één product!", "error"); 
     return; 
   }
 
@@ -620,6 +627,7 @@
     document.getElementById("barcodeInput").focus();
   }, 50);
 }
+
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
@@ -1072,21 +1080,85 @@ function addInventoryItem() {
       updateInventoryCategoryOptions();
     });
 
-    // achievementslist
     let achievementsList = {
-  "Big Spender": { condition: (total) => total >= 50, icon: "🏆", hidden: false },
-  "Kleine Belegger": { condition: (total) => total >= 10, icon: "💰", hidden: false },
-  "Combinatie King": { condition: (_, purchaseList) => new Set(purchaseList).size >= 3, icon: "🔁", hidden: false },
-  "Loyaliteitskoning": { condition: (_, __, ___, totalPurchases) => totalPurchases >= 10, icon: "🔟", hidden: false },
-  "High Roller": { condition: (total) => total >= 100, icon: "🥇", hidden: false },
-  "Vaste Klant": { condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, icon: "📅", hidden: false },
-  "De Koelkast Koning": { condition: (total) => total >= 250, icon: "🏴‍☠️", hidden: true }, // Nu verborgen tot behaald
-  "Smaakverkenner": { condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, icon: "🏅", hidden: true },
-  "De Spijtoptant": { condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, icon: "❌", hidden: true },
-  "De Gulle Gever": { condition: (_, purchaseList) => purchaseList.filter(p => p.price >= 10).length >= 3, icon: "🎁", hidden: true },
-  "Vaste Klant": { condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, icon: "📅", hidden: false },
+  // 🔹 Openbare Achievements (zichtbaar voor iedereen)
+  "Big Spender": { 
+    condition: (total) => total >= 50, 
+    icon: "🏆", 
+    hidden: false,
+    description: "Geef in totaal €50 of meer uit." 
+  },
+  "Kleine Belegger": { 
+    condition: (total) => total >= 10, 
+    icon: "💰", 
+    hidden: false,
+    description: "Geef in totaal €10 of meer uit." 
+  },
+  "Combinatie King": { 
+    condition: (_, purchaseList) => new Set(purchaseList.map(p => p.category)).size >= 3, 
+    icon: "🔁", 
+    hidden: false,
+    description: "Koop 3 verschillende producten in één aankoop." 
+  },
+  "Loyaliteitskoning": { 
+    condition: (_, __, ___, totalPurchases) => totalPurchases >= 10, 
+    icon: "🔟", 
+    hidden: false,
+    description: "Doe in totaal 10 aankopen." 
+  },
+  "High Roller": { 
+    condition: (total) => total >= 100, 
+    icon: "🥇", 
+    hidden: false,
+    description: "Geef in totaal €100 of meer uit." 
+  },
+  "Vaste Klant": { 
+    condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, 
+    icon: "📅", 
+    hidden: false,
+    description: "Koop iets op 3 verschillende dagen." 
+  },
 
+  // 🔹 Verborgen Achievements (worden pas onthuld na behalen)
+  "De Koelkast Koning": { 
+    condition: (total) => total >= 250, 
+    icon: "🏴‍☠️", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
+  "Smaakverkenner": { 
+    condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, 
+    icon: "🏅", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
+  "De Spijtoptant": { 
+    condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, 
+    icon: "❌", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
+  "De Gulle Gever": { 
+    condition: (_, purchaseList) => purchaseList.filter(p => p.price >= 10).length >= 3, 
+    icon: "🎁", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
+  "De Omgekeerde Wereld": { 
+    condition: (total, purchaseList) => total === 0 && purchaseList.length > 0, 
+    icon: "🔄", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  },
+  "Betaald met Interesse": { 
+    condition: (_, __, ___, ____, firstOfDay) => firstOfDay, 
+    icon: "🎖", 
+    hidden: true,
+    description: "??? (Hidden Achievement)" 
+  }
 };
+
+
 
 
 
@@ -1102,6 +1174,17 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
   userDays[user].add(new Date().toDateString());
   localStorage.setItem("userDays", JSON.stringify(userDays));
 
+  // Check of deze gebruiker de eerste koper van de dag is
+  let today = new Date().toDateString();
+  let firstBuyer = JSON.parse(localStorage.getItem("firstBuyer")) || {};
+  let firstOfDay = false;
+  
+  if (!firstBuyer[today]) {
+    firstBuyer[today] = user;
+    localStorage.setItem("firstBuyer", JSON.stringify(firstBuyer));
+    firstOfDay = true;
+  }
+
   if (!userAchievements[user]) {
     userAchievements[user] = [];
   }
@@ -1109,7 +1192,7 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
   let achievementQueue = []; 
 
   for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
-    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, 0, userPurchases.length, false, userDays[user])) {
+    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, 0, userPurchases.length, firstOfDay, userDays[user])) {
       userAchievements[user].push(achievement);
       achievementQueue.push({ title: `${icon} ${achievement}`, message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` });
     }
@@ -1121,6 +1204,7 @@ function checkAchievements(user, totalSpent, purchaseList, removedPurchase = fal
     setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
   });
 }
+
 
 
 
@@ -1191,20 +1275,26 @@ function closeAchievementModal() {
 }
 
 function showAchievementList() {
-  let html = `<h3>🏅 Beschikbare Achievements</h3>`;
+  let html = `<h3 style="text-align:center;">🏅 Alle Mogelijke Achievements</h3>`;
+  
+  html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">`;
 
-  for (let [achievement, { icon, hidden }] of Object.entries(achievementsList)) {
+  for (let [achievement, { icon, hidden, description }] of Object.entries(achievementsList)) {
     let isAchieved = userAchievements[currentUser]?.includes(achievement);
     let displayName = isAchieved || !hidden ? achievement : "??? (Hidden Achievement)";
     let status = isAchieved ? "✅ Behaald" : "🔄 Nog te behalen";
+    let achievementDescription = hidden && !isAchieved ? "??? (Hidden Achievement)" : description;
 
     html += `
-      <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; text-align: left;">
+      <div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
         <strong>${icon} ${displayName}</strong><br>
-        <span style="color: ${isAchieved ? 'green' : 'red'};">${status}</span>
+        <span style="color: ${isAchieved ? 'green' : 'red'}; font-weight: bold;">${status}</span><br>
+        <small style="color: gray;">${achievementDescription}</small>
       </div>
     `;
   }
+
+  html += `</div>`;
 
   document.getElementById("allAchievementsContent").innerHTML = html;
   document.getElementById("achievementListModal").style.display = "block";
@@ -1215,9 +1305,6 @@ function closeAchievementListModal() {
 }
 
 
-function closeAchievementListModal() {
-  document.getElementById("achievementListModal").style.display = "none";
-}
 
 
   </script>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Go Go Koelkast</title>
+  <title>Koelkast Shop</title>
   <!-- Speels lettertype -->
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <!-- JsBarcode Library voor barcode genereren -->
@@ -287,7 +287,7 @@
         </div>
         <button onclick="removePurchase()" class="delete-btn">Verwijder aankoop</button>
         <button onclick="showPurchases()" style="background-color:#007bff;">Bekijk recente aankopen</button>
-        <button onclick="showBarcodeList()" style="background-color:#28a745;">Bekijk barcode lijst</button>
+        <button onclick="showAchievementList()" style="background-color:#60cf47;">Bekijk Alle Achievements</button>
         <button onclick="showAdminOverview()" style="background-color:#f44e90;">Admin Overzicht</button>
         <!-- Extra knop in hoofdpaneel: verwijder barcode voor de huidige gebruiker -->
         <button onclick="removeCurrentUserBarcode()" style="background-color:#FFA500;">Verwijder barcode</button>
@@ -310,6 +310,19 @@
     <button onclick="closeBarcodeModal()">Sluiten</button>
     <div id="barcodeListModal"></div>
   </div>
+
+  <div id="achievementModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); text-align: center;">
+    <h2>🏆 Behaalde Achievements</h2>
+    <div id="achievementContent"></div>
+    <button onclick="closeAchievementModal()" style="margin-top: 15px; padding: 8px 12px; background-color: #f44e90; color: white; border: none; border-radius: 5px; cursor: pointer;">Sluiten</button>
+  </div>
+  
+  <div id="achievementListModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); text-align: center;">
+    <h2>🏅 Alle Achievements</h2>
+    <div id="allAchievementsContent"></div>
+    <button onclick="closeAchievementListModal()" style="margin-top: 15px; padding: 8px 12px; background-color: #f44e90; color: white; border: none; border-radius: 5px; cursor: pointer;">Sluiten</button>
+  </div>
+  
 
   <!-- Admin overzicht -->
   <div id="adminView" class="container">
@@ -549,48 +562,64 @@
     }
 
     function confirmPurchase() {
-      if (!currentUser) { 
-        showNotification("Selecteer eerst een gebruiker.", "error"); 
-        return; 
-      }
-      if (Object.keys(selectedCounts).length === 0) { 
-        showNotification("Kies minstens één categorie!", "error"); 
-        return; 
-      }
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[currentUser]) { 
-        purchases[currentUser] = []; 
-      }
-      for (let [catKey, count] of Object.entries(selectedCounts)) {
-        let category = productCategories.find(c => c.key === catKey);
-        for (let i = 0; i < count; i++) {
-          let purchase = { 
-            name: category.label, 
-            price: category.defaultPrice,
-            category: category.key,
-            timestamp: new Date().toISOString() 
-          };
-          purchases[currentUser].push(purchase);
-        }
-      }
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateOverzicht();
-      showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
+  if (!currentUser) { 
+    showNotification("Selecteer eerst een gebruiker.", "error"); 
+    return; 
+  }
+  if (Object.keys(selectedCounts).length === 0) { 
+    showNotification("Kies minstens één categorie!", "error"); 
+    return; 
+  }
 
-      // Reset de selectie en herstel de knoplabels
-      selectedCounts = {};
-      document.querySelectorAll(".product").forEach(el => {
-        let key = el.dataset.key;
-        let cat = productCategories.find(c => c.key === key);
-        if (cat) { el.firstChild.textContent = cat.label; }
-        el.classList.remove("selected");
-      });
-      // Wis de barcode input en zet focus erna met een korte vertraging
-      document.getElementById("barcodeInput").value = "";
-      setTimeout(() => {
-        document.getElementById("barcodeInput").focus();
-      }, 50);
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  if (!purchases[currentUser]) { 
+    purchases[currentUser] = []; 
+  }
+
+  let purchaseList = []; // Om de aankooplijst bij te houden voor achievements
+
+  for (let [catKey, count] of Object.entries(selectedCounts)) {
+    let category = productCategories.find(c => c.key === catKey);
+    for (let i = 0; i < count; i++) {
+      let purchase = { 
+        name: category.label, 
+        price: category.defaultPrice,
+        category: category.key,
+        timestamp: new Date().toISOString()
+      };
+      purchases[currentUser].push(purchase);
+      purchaseList.push(purchase); // Voeg toe aan de lijst voor achievements
     }
+  }
+
+  localStorage.setItem("purchases", JSON.stringify(purchases));
+
+  // Bereken totaaluitgaven van de gebruiker
+  let totalSpent = purchases[currentUser].reduce((sum, p) => sum + p.price, 0);
+  let totalPurchases = purchases[currentUser].length;
+  
+  // Check voor achievements
+  checkAchievements(currentUser, totalSpent, purchases[currentUser]);
+
+  // Update UI
+  updateOverzicht();
+  showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
+
+  // Reset de selectie en herstel de knoplabels
+  selectedCounts = {};
+  document.querySelectorAll(".product").forEach(el => {
+    let key = el.dataset.key;
+    let cat = productCategories.find(c => c.key === key);
+    if (cat) { el.firstChild.textContent = cat.label; }
+    el.classList.remove("selected");
+  });
+
+  // Wis de barcode input en zet focus erna met een korte vertraging
+  document.getElementById("barcodeInput").value = "";
+  setTimeout(() => {
+    document.getElementById("barcodeInput").focus();
+  }, 50);
+}
 
     function handleBarcodeScan() {
       let scannedValue = document.getElementById("barcodeInput").value.trim();
@@ -980,21 +1009,31 @@
       }
     }
     function removePurchase() {
-      if (!currentUser) {
-        showNotification("Geen gebruiker geselecteerd.", "error");
-        return;
-      }
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[currentUser] || purchases[currentUser].length === 0) {
-        showNotification("Geen aankopen om te verwijderen.", "error");
-        return;
-      }
-      purchases[currentUser].pop();
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateOverzicht();
-      showNotification("Laatste aankoop verwijderd.", "success");
-    }
-    function addInventoryItem() {
+  if (!currentUser) {
+    showNotification("Geen gebruiker geselecteerd.", "error");
+    return;
+  }
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  if (!purchases[currentUser] || purchases[currentUser].length === 0) {
+    showNotification("Geen aankopen om te verwijderen.", "error");
+    return;
+  }
+  
+  // Verwijder de laatste aankoop
+  let removedItem = purchases[currentUser].pop();
+  localStorage.setItem("purchases", JSON.stringify(purchases));
+
+  // Markeer als een verwijderde aankoop
+  let removedPurchase = true;
+
+  // Update achievements
+  checkAchievements(currentUser, purchases[currentUser].reduce((sum, p) => sum + p.price, 0), purchases[currentUser], removedPurchase);
+
+  updateOverzicht();
+  showNotification("Laatste aankoop verwijderd.", "success");
+}
+
+function addInventoryItem() {
       let categorySelect = document.getElementById("inventoryCategory");
       let category = categorySelect.value;
       let itemName = document.getElementById("inventoryItem").value.trim();
@@ -1032,6 +1071,155 @@
       updateUserBarcodeDisplay();
       updateInventoryCategoryOptions();
     });
+
+    // achievementslist
+    let achievementsList = {
+  "Big Spender": { condition: (total) => total >= 50, icon: "🏆", hidden: false },
+  "Kleine Belegger": { condition: (total) => total >= 10, icon: "💰", hidden: false },
+  "Combinatie King": { condition: (_, purchaseList) => new Set(purchaseList).size >= 3, icon: "🔁", hidden: false },
+  "Loyaliteitskoning": { condition: (_, __, ___, totalPurchases) => totalPurchases >= 10, icon: "🔟", hidden: false },
+  "High Roller": { condition: (total) => total >= 100, icon: "🥇", hidden: false },
+  "Vaste Klant": { condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, icon: "📅", hidden: false },
+  "De Koelkast Koning": { condition: (total) => total >= 250, icon: "🏴‍☠️", hidden: true }, // Nu verborgen tot behaald
+  "Smaakverkenner": { condition: (_, purchaseList, ___, ____, _____, uniqueItems) => uniqueItems.size === productCategories.length, icon: "🏅", hidden: true },
+  "De Spijtoptant": { condition: (_, __, ___, ____, _____, ______, removedPurchase) => removedPurchase, icon: "❌", hidden: true },
+  "De Gulle Gever": { condition: (_, purchaseList) => purchaseList.filter(p => p.price >= 10).length >= 3, icon: "🎁", hidden: true },
+  "Vaste Klant": { condition: (_, __, ___, totalPurchases, ____, daysPurchased) => daysPurchased.size >= 3, icon: "📅", hidden: false },
+
+};
+
+
+
+// Behaalde achievements opslaan in localStorage
+let userAchievements = JSON.parse(localStorage.getItem("userAchievements")) || {};
+
+function checkAchievements(user, totalSpent, purchaseList, removedPurchase = false) {
+  let userPurchases = purchaseList || [];
+  
+  // Houd bij op welke dagen een gebruiker iets koopt
+  let userDays = JSON.parse(localStorage.getItem("userDays")) || {};
+  if (!userDays[user]) userDays[user] = new Set();
+  userDays[user].add(new Date().toDateString());
+  localStorage.setItem("userDays", JSON.stringify(userDays));
+
+  if (!userAchievements[user]) {
+    userAchievements[user] = [];
+  }
+
+  let achievementQueue = []; 
+
+  for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
+    if (!userAchievements[user].includes(achievement) && condition(totalSpent, userPurchases, 0, userPurchases.length, false, userDays[user])) {
+      userAchievements[user].push(achievement);
+      achievementQueue.push({ title: `${icon} ${achievement}`, message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` });
+    }
+  }
+
+  localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
+
+  achievementQueue.forEach((ach, index) => {
+    setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
+  });
+}
+
+
+
+// Functie om een GROTE melding te tonen bij een nieuwe achievement
+function showBigAchievementPopup(title, message) {
+  let popup = document.createElement("div");
+  popup.style.position = "fixed";
+  popup.style.top = "50%";
+  popup.style.left = "50%";
+  popup.style.transform = "translate(-50%, -50%)";
+  popup.style.background = "gold";
+  popup.style.padding = "20px";
+  popup.style.borderRadius = "15px";
+  popup.style.boxShadow = "0px 4px 10px rgba(0,0,0,0.3)";
+  popup.style.zIndex = "1000";
+  popup.style.textAlign = "center";
+  popup.style.fontSize = "24px";
+  popup.style.fontWeight = "bold";
+  popup.style.color = "#333";
+  popup.style.animation = "achievementFadeIn 0.5s ease-in-out";
+
+  popup.innerHTML = `<h2>${title}</h2><p>${message}</p>`;
+
+  document.body.appendChild(popup);
+
+  setTimeout(() => {
+    popup.style.animation = "achievementFadeOut 0.5s ease-in-out";
+    setTimeout(() => popup.remove(), 500);
+  }, 3000);
+}
+
+// CSS Animatie toevoegen
+let style = document.createElement("style");
+style.innerHTML = `
+  @keyframes achievementFadeIn {
+    from { transform: translate(-50%, -60%); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+  }
+  @keyframes achievementFadeOut {
+    from { transform: translate(-50%, -50%); opacity: 1; }
+    to { transform: translate(-50%, -60%); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+
+
+// Laat achievements zien in de modal
+function showAchievements() {
+  if (!currentUser) {
+    showNotification("Geen gebruiker geselecteerd.", "error");
+    return;
+  }
+
+  let achievements = userAchievements[currentUser] || [];
+  let html = "<ul>";
+  achievements.forEach(a => {
+    html += `<li>${achievementsList[a].icon} ${a}</li>`;
+  });
+  html += "</ul>";
+
+  document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
+  document.getElementById("achievementModal").style.display = "block";
+}
+
+// Modal sluiten
+function closeAchievementModal() {
+  document.getElementById("achievementModal").style.display = "none";
+}
+
+function showAchievementList() {
+  let html = `<h3>🏅 Beschikbare Achievements</h3>`;
+
+  for (let [achievement, { icon, hidden }] of Object.entries(achievementsList)) {
+    let isAchieved = userAchievements[currentUser]?.includes(achievement);
+    let displayName = isAchieved || !hidden ? achievement : "??? (Hidden Achievement)";
+    let status = isAchieved ? "✅ Behaald" : "🔄 Nog te behalen";
+
+    html += `
+      <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; text-align: left;">
+        <strong>${icon} ${displayName}</strong><br>
+        <span style="color: ${isAchieved ? 'green' : 'red'};">${status}</span>
+      </div>
+    `;
+  }
+
+  document.getElementById("allAchievementsContent").innerHTML = html;
+  document.getElementById("achievementListModal").style.display = "block";
+}
+
+function closeAchievementListModal() {
+  document.getElementById("achievementListModal").style.display = "none";
+}
+
+
+function closeAchievementListModal() {
+  document.getElementById("achievementListModal").style.display = "none";
+}
+
+
   </script>
 </body>
 </html>

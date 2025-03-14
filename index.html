@@ -1095,7 +1095,10 @@ function addInventoryItem() {
     description: "Geef in totaal €10 of meer uit." 
   },
   "Combinatie King": { 
-    condition: (_, purchaseList) => new Set(purchaseList.map(p => p.category)).size >= 3, 
+    condition: (_, purchaseList) => {
+      let uniqueCategories = new Set(purchaseList.map(p => p.category));
+      return uniqueCategories.size >= 3; // Vereist 3 verschillende productcategorieën
+    },
     icon: "🔁", 
     hidden: false,
     description: "Koop 3 verschillende producten in één aankoop." 

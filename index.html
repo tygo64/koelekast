@@ -9,251 +9,251 @@
   <!-- JsBarcode Library voor barcode genereren -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* Algemene styling */
-    body {
-      font-family: 'Comic Neue', cursive, sans-serif;
-      background: linear-gradient(to bottom right, #fceabb, #f8b500);
-      color: #333;
-      padding: 20px;
-      margin: 0;
-    }
-    /* Notificatie styling */
-    #notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 10px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      opacity: 0;
-      transition: opacity 0.5s;
-      z-index: 1000;
-      display: none;
-    }
-    #notification.show { opacity: 1; }
-    #notification.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    #notification.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    /* Grid container (sidebar layout) */
-    #grid-container {
-      display: grid;
-      grid-template-areas: 
-        "overview products products"
-        "sidebar sidebar sidebar";
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: 15px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    /* Sidebar: Acties en Voorraad */
-    .sidebar {
-      grid-area: sidebar;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .overview {
-      grid-area: overview;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .categories {
-      grid-area: products;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .categories h2 {
-      margin-top: 0;
-    }
-    /* Extra tekstregel onder de Categorieën titel */
-    .categories p.extra-text {
-      font-size: 20px;
-      color: #51ff00;
-      margin-top: 5px;
-    }
-    .barcode-scan-container {
-      margin-bottom: 15px;
-      text-align: center;
-    }
-    .barcode-scan-container input {
-      width: 100%;
-      padding: 8px;
-      font-size: 16px;
-    }
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      justify-items: center;
-      align-items: center;
-    }
-    .barcode-list {
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      overflow-y: auto;
-    }
-    .actions, .inventory {
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1, h2, h3 {
-      color: #ff6b81;
-      margin-top: 0;
-    }
-    .product {
-      padding: 15px;
-      border: 2px solid #f8b500;
-      font-size: 18px;
-      cursor: pointer;
-      background-color: #fff;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-      width: 150px;
-      height: 150px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-    .product:hover,
-    .product.selected {
-      background-color: #ffeaa7;
-      transform: scale(1.05);
-    }
-    button {
-      margin-top: 15px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 12px;
-      border: none;
-      background-color: #ff6b81;
-      color: #fff;
-      cursor: pointer;
-      width: 100%;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-    button:hover {
-      background-color: #ff4757;
-      transform: scale(1.03);
-    }
-    button:active {
-      background-color: #ff2e2e;
-    }
-    .delete-btn {
-      background-color: #ff7979;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    select {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background: #fff url('data:image/svg+xml;utf8,<svg fill="%23999" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
-      background-size: 16px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      font-size: 14px;
-    }
-    table, th, td {
-      border: 1px solid #f8b500;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #ff6b81;
-      color: #fff;
-    }
-    #modal, #barcodeModal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #fff;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      z-index: 1001;
-      max-height: 80%;
-      overflow-y: auto;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    #modal button, #barcodeModal button {
-      margin-bottom: 10px;
-      width: auto;
-    }
-    @media (max-width: 800px) {
-      #grid-container {
-        grid-template-areas:
-          "overview"
-          "products"
-          "sidebar";
-        grid-template-columns: 1fr;
-      }
-    }
-    .overview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .new-user-container {
-      display: flex;
-      gap: 10px;
-    }
-    .new-user-container input {
-      width: 150px;
-    }
-    /* Admin view styling */
-    #adminView {
-      display: none;
-      max-width: 1200px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      /* Maak het admin menu wat kleiner (uitgezoomd) */
-      transform: scale(0.9);
-      transform-origin: top center;
-    }
-    .admin-section {
-      margin-top: 20px;
-    }
-
-    @media (max-width: 600px) {
-  #allAchievementsContent div {
-    grid-template-columns: 1fr !important; /* Op mobiel wordt het 1 kolom */
+   /* Algemene styling */
+body {
+    font-family: 'Comic Neue', cursive, sans-serif;
+    background: linear-gradient(to bottom right, #fceabb, #f8b500);
+    color: #333;
+    padding: 20px;
+    margin: 0;
   }
+  /* Notificatie styling */
+  #notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.5s;
+    z-index: 1000;
+    display: none;
+  }
+  #notification.show { opacity: 1; }
+  #notification.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  #notification.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  /* Grid container (sidebar layout) */
+  #grid-container {
+    display: grid;
+    grid-template-areas: 
+      "overview products products"
+      "sidebar sidebar sidebar";
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  /* Sidebar: Acties en Voorraad */
+  .sidebar {
+    grid-area: sidebar;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .overview {
+    grid-area: overview;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .categories {
+    grid-area: products;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .categories h2 {
+    margin-top: 0;
+  }
+  /* Extra tekstregel onder de Categorieën titel */
+  .categories p.extra-text {
+    font-size: 20px;
+    color: #51ff00;
+    margin-top: 5px;
+  }
+  .barcode-scan-container {
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  .barcode-scan-container input {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    justify-items: center;
+    align-items: center;
+  }
+  .barcode-list {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow-y: auto;
+  }
+  .actions, .inventory {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  h1, h2, h3 {
+    color: #ff6b81;
+    margin-top: 0;
+  }
+  .product {
+    padding: 15px;
+    border: 2px solid #f8b500;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: #fff;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    width: 150px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .product:hover,
+  .product.selected {
+    background-color: #ffeaa7;
+    transform: scale(1.05);
+  }
+  button {
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: none;
+    background-color: #ff6b81;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  button:hover {
+    background-color: #ff4757;
+    transform: scale(1.03);
+  }
+  button:active {
+    background-color: #ff2e2e;
+  }
+  .delete-btn {
+    background-color: #ff7979;
+  }
+  input, select {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: #fff url('data:image/svg+xml;utf8,<svg fill="%23999" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+  }
+  table, th, td {
+    border: 1px solid #f8b500;
+  }
+  th, td {
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background-color: #ff6b81;
+    color: #fff;
+  }
+  #modal, #barcodeModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    z-index: 1001;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  #modal button, #barcodeModal button {
+    margin-bottom: 10px;
+    width: auto;
+  }
+  @media (max-width: 800px) {
+    #grid-container {
+      grid-template-areas:
+        "overview"
+        "products"
+        "sidebar";
+      grid-template-columns: 1fr;
+    }
+  }
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .new-user-container {
+    display: flex;
+    gap: 10px;
+  }
+  .new-user-container input {
+    width: 150px;
+  }
+  /* Admin view styling */
+  #adminView {
+    display: none;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    /* Maak het admin menu wat kleiner (uitgezoomd) */
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+  .admin-section {
+    margin-top: 20px;
+  }
+
+  @media (max-width: 600px) {
+#allAchievementsContent div {
+  grid-template-columns: 1fr !important; /* Op mobiel wordt het 1 kolom */
+}
 }
 
   </style>
@@ -367,259 +367,253 @@
   </div>
 
   <script>
-    /**********************
+   /**********************
      * Global Variables & Initialisatie
      **********************/
-    const confirmPurchaseBarcode = "000000000000"; // Barcode voor aankoopbevestiging
+ const confirmPurchaseBarcode = "000000000000"; // Barcode voor aankoopbevestiging
 
-    // Productcategorieën
-    let productCategories = JSON.parse(localStorage.getItem("productCategories"));
-    if (!productCategories) {
-      productCategories = [
-        { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
-        { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
-        { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
-        { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
-      ];
-      localStorage.setItem("productCategories", JSON.stringify(productCategories));
-    }
-
-    // Voorraad
-    let inventory = JSON.parse(localStorage.getItem("inventory"));
-    if (!inventory) {
-      inventory = {
-        snacks: ["Lion", "Twix", "Mars", "Snickers", "Kitkat"],
-        drinken: ["Coca-Cola", "Coca-Cola Zero", "Coca-Cola Cherry", "Coca-Cola Vanille", "7UP"],
-        kinderBueno: ["Kinder Bueno"],
-        overige: ["Arizona", "Dr Pepper"]
-      };
-      localStorage.setItem("inventory", JSON.stringify(inventory));
-    }
-
-    // Gebruikers en hun barcodes
-    let userBarcodes = JSON.parse(localStorage.getItem("userBarcodes"));
-    if (!userBarcodes) {
-      userBarcodes = {};
-      localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-    }
-
-    let currentUser = "";
-    let selectedCounts = {};
-
-    /**********************
-     * UI Update Functions
-     **********************/
-    function showNotification(message, type = "success") {
-      const notif = document.getElementById("notification");
-      notif.innerText = message;
-      notif.className = "";
-      notif.classList.add("show", type);
-      notif.style.display = "block";
-      setTimeout(() => {
-        notif.classList.remove("show");
-        notif.style.display = "none";
-      }, 3000);
-    }
-
-    function closeModal() { document.getElementById("modal").style.display = "none"; }
-    function closeBarcodeModal() { document.getElementById("barcodeModal").style.display = "none"; }
-
-    /**********************
-     * Productcategorieën laden
-     **********************/
-    function loadProducts() {
-      const container = document.getElementById("products");
-      container.innerHTML = "";
-
-      // Voeg producten toe
-      productCategories.forEach(category => {
-        let div = document.createElement("div");
-        div.className = "product";
-        div.dataset.key = category.key;
-        
-        // Label element
-        let label = document.createElement("div");
-        label.textContent = category.label;
-        div.appendChild(label);
-        
-        // SVG voor de productbarcode
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "product-barcode-" + category.key;
-        svg.style.display = "block";
-        svg.style.margin = "5px auto 0";
-        div.appendChild(svg);
-        JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
-
-        // Klik-event: verhoog teller
-        div.addEventListener("click", function() {
-          let count = selectedCounts[category.key] || 0;
-          count++;
-          selectedCounts[category.key] = count;
-          label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
-          div.classList.add("selected");
-        });
-
-        // Rechterklik: verlaag teller
-        div.addEventListener("contextmenu", function(e) {
-          e.preventDefault();
-          let count = selectedCounts[category.key] || 0;
-          if (count > 0) {
-            count--;
-            if (count === 0) {
-              delete selectedCounts[category.key];
-              label.textContent = category.label;
-              div.classList.remove("selected");
-            } else {
-              selectedCounts[category.key] = count;
-              label.textContent = category.label + " (" + count + ")";
-            }
-          }
-        });
-
-        container.appendChild(div);
-      });
-
-      // Voeg de aankoopbarcode toe als apart product-item
-      let confirmDiv = document.createElement("div");
-      confirmDiv.className = "product";
-      confirmDiv.style.border = "2px solid red";
-      confirmDiv.style.backgroundColor = "#ffdddd";
-      confirmDiv.dataset.key = "confirmPurchase";
-
-      let confirmLabel = document.createElement("div");
-      confirmLabel.textContent = "Bevestig Aankoop";
-      confirmDiv.appendChild(confirmLabel);
-
-      let confirmSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      confirmSvg.id = "confirm-purchase-barcode";
-      confirmSvg.style.display = "block";
-      confirmSvg.style.margin = "5px auto 0";
-      confirmDiv.appendChild(confirmSvg);
-
-      JsBarcode(confirmSvg, confirmPurchaseBarcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
-
-      confirmDiv.addEventListener("click", function() {
-        confirmPurchase();
-      });
-
-      container.appendChild(confirmDiv);
-    }
-
-    // Overzicht sorteren op totaal besteed (prijs) en highlight de regel van de geselecteerde gebruiker
-    function updateOverzicht() {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      // Maak een array met alle gebruikers en bereken hun totaalbedrag
-      let usersArray = Object.keys(userBarcodes).map(user => {
-        let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
-        return { user, totalSpent };
-      });
-      // Sorteer op totaalbedrag (hoog naar laag)
-      usersArray.sort((a, b) => b.totalSpent - a.totalSpent);
-
-      let html = "<table>";
-      html += "<tr><th>Gebruiker</th><th>Barcode</th>";
-      productCategories.forEach(product => {
-        html += `<th>${product.label}</th>`;
-      });
-      html += "<th>Totaal (€)</th></tr>";
-
-      // Loop met index voor de ranking
-      usersArray.forEach((userObj, index) => {
-        let { user, totalSpent } = userObj;
-        let medalLabel = "";
-        let backgroundColor = "";
-        if (index === 0) {
-          medalLabel = "Big Spender";
-          backgroundColor = "#FFD700"; // goud
-        } else if (index === 1) {
-          medalLabel = "Baller";
-          backgroundColor = "#C0C0C0"; // zilver
-        } else if (index === 2) {
-          medalLabel = "Mid";
-          backgroundColor = "#CD7F32"; // brons
-        }
-        // Als de gebruiker de huidige is, overschrijf dan met groen
-        let rowStyle = (user === currentUser) ? 'style="background-color: lightgreen;"' 
-                      : (backgroundColor ? `style="background-color: ${backgroundColor};"` : "");
-        // Voeg de naam en (indien top 3) de medal label toe
-        let userCell = medalLabel 
-          ? `${user}<br/><span style="font-size: 12px; font-style: italic;">${medalLabel}</span>` 
-          : user;
-        html += `<tr ${rowStyle}><td>${userCell}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
-        productCategories.forEach(product => {
-          let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
-          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
-        });
-        html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
-      });
-      html += "</table>";
-
-      // Bereken totaal uitgegeven in de winkel (over alle gebruikers)
-      let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
-
-      document.getElementById("Overzicht").innerHTML = html;
-
-      // Voeg barcodes toe
-      usersArray.forEach(({user}) => {
-        let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
-        if (svg && userBarcodes[user]) {
-          JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
-        }
-      });
-    }
-
-    function updateTotalSpent(user, amount) {
-    // Haal de bestaande aankopen op uit localStorage
-    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-    
-    // Controleer of de gebruiker al aankopen heeft, zo niet, maak een nieuwe lijst
-    if (!purchases[user]) {
-        purchases[user] = [];
-    }
-
-    // Bereken het totale bedrag van de gebruiker door alle prijzen op te tellen
-    let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
-
-    // Voeg het nieuwe aankoopbedrag toe aan het totale bedrag
-    totalSpent += amount;
-
-    // Sla de bijgewerkte aankopen op in localStorage
-    localStorage.setItem("purchases", JSON.stringify(purchases));
-
-    // Retourneer het nieuwe totaalbedrag
-    return totalSpent;
+// Productcategorieën
+let productCategories = JSON.parse(localStorage.getItem("productCategories"));
+if (!productCategories) {
+  productCategories = [
+    { key: "snacks", label: "Snacks", defaultPrice: 0.50, barcode: "123456789012" },
+    { key: "kinderBueno", label: "Kinder Bueno", defaultPrice: 0.75, barcode: "234567890123" },
+    { key: "drinken", label: "Drinken", defaultPrice: 0.80, barcode: "345678901234" },
+    { key: "overige", label: "Overige dranken", defaultPrice: 1.10, barcode: "456789012345" }
+  ];
+  localStorage.setItem("productCategories", JSON.stringify(productCategories));
 }
 
+// Voorraad
+let inventory = JSON.parse(localStorage.getItem("inventory"));
+if (!inventory) {
+  inventory = {
+    snacks: ["Lion", "Twix", "Mars", "Snickers", "Kitkat"],
+    drinken: ["Coca-Cola", "Coca-Cola Zero", "Coca-Cola Cherry", "Coca-Cola Vanille", "7UP"],
+    kinderBueno: ["Kinder Bueno"],
+    overige: ["Arizona", "Dr Pepper"]
+  };
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+}
+
+// Gebruikers en hun barcodes
+let userBarcodes = JSON.parse(localStorage.getItem("userBarcodes"));
+if (!userBarcodes) {
+  userBarcodes = {};
+  localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+}
+
+let currentUser = "";
+let selectedCounts = {};
+
+/**********************
+ * UI Update Functions
+ **********************/
+function showNotification(message, type = "success") {
+  const notif = document.getElementById("notification");
+  notif.innerText = message;
+  notif.className = "";
+  notif.classList.add("show", type);
+  notif.style.display = "block";
+  setTimeout(() => {
+    notif.classList.remove("show");
+    notif.style.display = "none";
+  }, 3000);
+}
+
+function closeModal() { document.getElementById("modal").style.display = "none"; }
+function closeBarcodeModal() { document.getElementById("barcodeModal").style.display = "none"; }
+
+/**********************
+ * Productcategorieën laden
+ **********************/
+function loadProducts() {
+  const container = document.getElementById("products");
+  container.innerHTML = "";
+
+  // Voeg producten toe
+  productCategories.forEach(category => {
+    let div = document.createElement("div");
+    div.className = "product";
+    div.dataset.key = category.key;
     
+    // Label element
+    let label = document.createElement("div");
+    label.textContent = category.label;
+    div.appendChild(label);
+    
+    // SVG voor de productbarcode
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "product-barcode-" + category.key;
+    svg.style.display = "block";
+    svg.style.margin = "5px auto 0";
+    div.appendChild(svg);
+    JsBarcode(svg, category.barcode, { format: "CODE128", displayValue: false, width: 1, height: 25 });
+
+    // Klik-event: verhoog teller
+    div.addEventListener("click", function() {
+      let count = selectedCounts[category.key] || 0;
+      count++;
+      selectedCounts[category.key] = count;
+      label.textContent = category.label + (count > 1 ? " (" + count + ")" : "");
+      div.classList.add("selected");
+    });
+
+    // Rechterklik: verlaag teller
+    div.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+      let count = selectedCounts[category.key] || 0;
+      if (count > 0) {
+        count--;
+        if (count === 0) {
+          delete selectedCounts[category.key];
+          label.textContent = category.label;
+          div.classList.remove("selected");
+        } else {
+          selectedCounts[category.key] = count;
+          label.textContent = category.label + " (" + count + ")";
+        }
+      }
+    });
+
+    container.appendChild(div);
+  });
+
+  // Voeg de aankoopbarcode toe als apart product-item
+  let confirmDiv = document.createElement("div");
+  confirmDiv.className = "product";
+  confirmDiv.style.border = "2px solid red";
+  confirmDiv.style.backgroundColor = "#ffdddd";
+  confirmDiv.dataset.key = "confirmPurchase";
+
+  let confirmLabel = document.createElement("div");
+  confirmLabel.textContent = "Bevestig Aankoop";
+  confirmDiv.appendChild(confirmLabel);
+
+  let confirmSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  confirmSvg.id = "confirm-purchase-barcode";
+  confirmSvg.style.display = "block";
+  confirmSvg.style.margin = "5px auto 0";
+  confirmDiv.appendChild(confirmSvg);
+
+  JsBarcode(confirmSvg, confirmPurchaseBarcode, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+
+  confirmDiv.addEventListener("click", function() {
+    confirmPurchase();
+  });
+
+  container.appendChild(confirmDiv);
+}
+
+// Overzicht sorteren op totaal besteed (prijs) en highlight de regel van de geselecteerde gebruiker
+function updateOverzicht() {
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  // Maak een array met alle gebruikers en bereken hun totaalbedrag
+  let usersArray = Object.keys(userBarcodes).map(user => {
+    let totalSpent = purchases[user] ? purchases[user].reduce((sum, p) => sum + p.price, 0) : 0;
+    return { user, totalSpent };
+  });
+  // Sorteer op totaalbedrag (hoog naar laag)
+  usersArray.sort((a, b) => b.totalSpent - a.totalSpent);
+
+  let html = "<table>";
+  html += "<tr><th>Gebruiker</th><th>Barcode</th>";
+  productCategories.forEach(product => {
+    html += `<th>${product.label}</th>`;
+  });
+  html += "<th>Totaal (€)</th></tr>";
+
+  // Loop met index voor de ranking
+  usersArray.forEach((userObj, index) => {
+    let { user, totalSpent } = userObj;
+    let medalLabel = "";
+    let backgroundColor = "";
+    if (index === 0) {
+      medalLabel = "Big Spender";
+      backgroundColor = "#FFD700"; // goud
+    } else if (index === 1) {
+      medalLabel = "Baller";
+      backgroundColor = "#C0C0C0"; // zilver
+    } else if (index === 2) {
+      medalLabel = "Mid";
+      backgroundColor = "#CD7F32"; // brons
+    }
+    // Als de gebruiker de huidige is, overschrijf dan met groen
+    let rowStyle = (user === currentUser) ? 'style="background-color: lightgreen;"' 
+                  : (backgroundColor ? `style="background-color: ${backgroundColor};"` : "");
+    // Voeg de naam en (indien top 3) de medal label toe
+    let userCell = medalLabel 
+      ? `${user}<br/><span style="font-size: 12px; font-style: italic;">${medalLabel}</span>` 
+      : user;
+    html += `<tr ${rowStyle}><td>${userCell}</td><td><svg id="user-barcode-${user.replace(/\s/g, '')}"></svg></td>`;
+    productCategories.forEach(product => {
+      let count = purchases[user] ? purchases[user].filter(p => p.category === product.key).length : 0;
+      html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
+    });
+    html += `<td>€${totalSpent.toFixed(2)}</td></tr>`;
+  });
+  html += "</table>";
+
+  // Bereken totaal uitgegeven in de winkel (over alle gebruikers)
+  let overallTotal = usersArray.reduce((sum, userObj) => sum + userObj.totalSpent, 0);
+
+  document.getElementById("Overzicht").innerHTML = html;
+
+  // Voeg barcodes toe
+  usersArray.forEach(({user}) => {
+    let svg = document.getElementById(`user-barcode-${user.replace(/\s/g, '')}`);
+    if (svg && userBarcodes[user]) {
+      JsBarcode(svg, userBarcodes[user], { format: "CODE128", displayValue: false, width: 1, height: 30 });
+    }
+  });
+}
+
+function updateTotalSpent(user, amount) {
+// Haal de bestaande aankopen op uit localStorage
+let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+
+// Controleer of de gebruiker al aankopen heeft, zo niet, maak een nieuwe lijst
+if (!purchases[user]) {
+    purchases[user] = [];
+}
+
+// Bereken het totale bedrag van de gebruiker door alle prijzen op te tellen
+let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+
+// Voeg het nieuwe aankoopbedrag toe aan het totale bedrag
+totalSpent += amount;
+
+// Sla de bijgewerkte aankopen op in localStorage
+localStorage.setItem("purchases", JSON.stringify(purchases));
+
+// Retourneer het nieuwe totaalbedrag
+return totalSpent;
+}
+
+
 function confirmPurchase() {
     if (!currentUser) { 
         showNotification("Selecteer eerst een gebruiker.", "error"); 
         return; 
     }
 
-    // Check of er producten zijn geselecteerd
     let emptyPurchase = Object.keys(selectedCounts).length === 0;
-
     if (emptyPurchase) { 
         showNotification("Je hebt niets aangeslagen, maar toch bevestigd!", "warning"); 
     }
 
-    // Laad bestaande aankopen
     let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-    
-    // Zorg dat de gebruiker een aankooplijst heeft
     if (!purchases[currentUser]) { 
         purchases[currentUser] = []; 
     }
 
-    let purchaseList = []; // Om de aankooplijst bij te houden voor achievements
-    let totalPurchaseAmount = 0; // Variabele om totaalbedrag van deze aankoop te berekenen
+    let purchaseList = [];
+    let totalPurchaseAmount = 0;
 
     if (!emptyPurchase) {
-        // Loop door alle geselecteerde producten en voeg ze toe aan de aankopen
         for (let [catKey, count] of Object.entries(selectedCounts)) {
             let category = productCategories.find(c => c.key === catKey);
-            if (!category) continue; // Sla over als de categorie niet bestaat
+            if (!category) continue;
 
             for (let i = 0; i < count; i++) {
                 let purchase = { 
@@ -630,29 +624,59 @@ function confirmPurchase() {
                 };
                 purchases[currentUser].push(purchase);
                 purchaseList.push(purchase);
-                totalPurchaseAmount += category.defaultPrice; // Tel prijs op bij totaalbedrag
+                totalPurchaseAmount += category.defaultPrice;
             }
         }
     }
 
-    // Sla de bijgewerkte aankopen op in localStorage
     localStorage.setItem("purchases", JSON.stringify(purchases));
 
-    // **Update het totale uitgegeven bedrag van de gebruiker**
     let totalSpent = updateTotalSpent(currentUser, totalPurchaseAmount);
 
-    // **Check voor achievements, inclusief 'De Omgekeerde Wereld'**
-    checkAchievements(currentUser, totalSpent, purchases[currentUser], false, emptyPurchase);
+    // **Achievements controleren en toekennen**
+    if (checkCombinatieKingDuringPurchase()) {
+        awardAchievement(currentUser, "Combinatie King");
+    }
 
-    // **Update UI zonder refresh**
-    updateOverzicht(); // Update de ranglijst en totaaluitgaven
-    updateInventoryDisplay(); // Vernieuw voorraad
-    updateUserBarcodeDisplay(); // Vernieuw gebruikerslijst
-    loadProducts(); // Vernieuw productweergave
+    if (checkVasteKlant(currentUser)) {
+        awardAchievement(currentUser, "Vaste Klant");
+    }
+
+    if (checkBetaaldMetInteresse(currentUser)) {
+        awardAchievement(currentUser, "Betaald met Interesse");
+    }
+
+    if (checkSmaakverkenner(currentUser)) {
+        awardAchievement(currentUser, "Smaakverkenner");
+    }
+
+    if (checkKleineBelegger(currentUser, totalSpent)) {
+        awardAchievement(currentUser, "Kleine Belegger");
+    }
+
+    if (checkBigSpender(currentUser, totalSpent)) {
+        awardAchievement(currentUser, "Big Spender");
+    }
+
+    if (checkHighRoller(currentUser, totalSpent)) {
+        awardAchievement(currentUser, "High Roller");
+    }
+
+    if (checkKoelkastKoning(currentUser, totalSpent)) {
+        awardAchievement(currentUser, "De Koelkast Koning");
+    }
+
+    if (checkOmgekeerdeWereld(emptyPurchase)) {
+        awardAchievement(currentUser, "De Omgekeerde Wereld");
+    }
+
+    updateOverzicht();
+    updateInventoryDisplay();
+    updateUserBarcodeDisplay();
+    loadProducts();
 
     showNotification(`${currentUser}, je aankoop is bevestigd.`, "success");
 
-    // **Reset de selectie en labels**
     selectedCounts = {};
     document.querySelectorAll(".product").forEach(el => {
         let key = el.dataset.key;
@@ -661,7 +685,6 @@ function confirmPurchase() {
         el.classList.remove("selected");
     });
 
-    // **Wis de barcode input en zet focus erna met een korte vertraging**
     document.getElementById("barcodeInput").value = "";
     setTimeout(() => {
         document.getElementById("barcodeInput").focus();
@@ -671,648 +694,721 @@ function confirmPurchase() {
 
 
 
-    function handleBarcodeScan() {
-      let scannedValue = document.getElementById("barcodeInput").value.trim();
-      if (!scannedValue) return;
-      
-      // Check voor gebruiker
-      let foundUser = null;
-      for (const [name, code] of Object.entries(userBarcodes)) {
-        if (code === scannedValue) { foundUser = name; break; }
-      }
-      if (foundUser) {
-        currentUser = foundUser;
-        showNotification(`Gebruiker geselecteerd: ${foundUser}`, "success");
-        document.getElementById("barcodeInput").value = "";
-        updateOverzicht(); // Update het overzicht zodat de rij groen wordt
-        return;
-      }
-      
-      // Check voor bevestigingsbarcode
-      if (scannedValue === confirmPurchaseBarcode) {
-        if (!currentUser) { showNotification("Geen gebruiker geselecteerd.", "error"); }
-        else { confirmPurchase(); }
-        document.getElementById("barcodeInput").value = "";
-        return;
-      }
-      
-      // Check voor productcategorie
-      let product = productCategories.find(p => p.barcode === scannedValue);
-      if (product) {
-        let productDivs = document.querySelectorAll(".product");
-        productDivs.forEach(div => {
-          if (div.dataset.key === product.key) {
-            div.click();
-            showNotification(`${product.label} toegevoegd via barcode.`, "success");
-          }
-        });
-        document.getElementById("barcodeInput").value = "";
-        return;
-      }
-      
-      showNotification("Barcode niet herkend.", "error");
-      document.getElementById("barcodeInput").value = "";
-      document.getElementById("barcodeInput").focus();
-    }
+function awardAchievement(user, achievement) {
+   if (!userAchievements[user]) {
+       userAchievements[user] = [];
+   }
+   if (!userAchievements[user].includes(achievement)) {
+       userAchievements[user].push(achievement);
+       localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
+       showBigAchievementPopup(achievementsList[achievement].icon + " " + achievement, `Gefeliciteerd! Je hebt "${achievement}" behaald!`);
+   }
+}
 
-    document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") { handleBarcodeScan(); }
+function handleBarcodeScan() {
+  let scannedValue = document.getElementById("barcodeInput").value.trim();
+  if (!scannedValue) return;
+  
+  // Check voor gebruiker
+  let foundUser = null;
+  for (const [name, code] of Object.entries(userBarcodes)) {
+    if (code === scannedValue) { foundUser = name; break; }
+  }
+  if (foundUser) {
+    currentUser = foundUser;
+    showNotification(`Gebruiker geselecteerd: ${foundUser}`, "success");
+    document.getElementById("barcodeInput").value = "";
+    updateOverzicht(); // Update het overzicht zodat de rij groen wordt
+    return;
+  }
+  
+  // Check voor bevestigingsbarcode
+  if (scannedValue === confirmPurchaseBarcode) {
+    if (!currentUser) { showNotification("Geen gebruiker geselecteerd.", "error"); }
+    else { confirmPurchase(); }
+    document.getElementById("barcodeInput").value = "";
+    return;
+  }
+  
+  // Check voor productcategorie
+  let product = productCategories.find(p => p.barcode === scannedValue);
+  if (product) {
+    let productDivs = document.querySelectorAll(".product");
+    productDivs.forEach(div => {
+      if (div.dataset.key === product.key) {
+        div.click();
+        showNotification(`${product.label} toegevoegd via barcode.`, "success");
+      }
     });
+    document.getElementById("barcodeInput").value = "";
+    return;
+  }
+  
+  showNotification("Barcode niet herkend.", "error");
+  document.getElementById("barcodeInput").value = "";
+  document.getElementById("barcodeInput").focus();
+}
 
-    function showPurchases() {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let allPurchases = [];
-      for (let user in purchases) {
-        purchases[user].forEach(p => { allPurchases.push({ ...p, user }); });
-      }
-      allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
-      allPurchases.forEach(p => {
-        html += `<tr>
-                  <td>${new Date(p.timestamp).toLocaleString()}</td>
-                  <td>${p.user}</td>
-                  <td>${p.name}</td>
-                  <td>€${p.price.toFixed(2)}</td>
-                </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("modalContent").innerHTML = html;
-      document.getElementById("modal").style.display = "block";
-    }
+document.getElementById("barcodeInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") { handleBarcodeScan(); }
+});
 
-    function updateInventoryDisplay() {
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
-      productCategories.forEach(cat => {
-        let catKey = cat.key;
-        let items = (inventory[catKey] || []).join(", ");
-        html += `<tr>
-                  <td>${cat.label}</td>
-                  <td>${items || "Geen items"}</td>
-                </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("inventoryDisplay").innerHTML = html;
-    }
+function showPurchases() {
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  let allPurchases = [];
+  for (let user in purchases) {
+    purchases[user].forEach(p => { allPurchases.push({ ...p, user }); });
+  }
+  allPurchases.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  let html = "<table><tr><th>Tijd</th><th>Gebruiker</th><th>Product</th><th>Prijs</th></tr>";
+  allPurchases.forEach(p => {
+    html += `<tr>
+              <td>${new Date(p.timestamp).toLocaleString()}</td>
+              <td>${p.user}</td>
+              <td>${p.name}</td>
+              <td>€${p.price.toFixed(2)}</td>
+            </tr>`;
+  });
+  html += "</table>";
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modal").style.display = "block";
+}
 
-    function updateInventoryOverview() {
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
-      productCategories.forEach(cat => {
-        let catKey = cat.key;
-        let items = (inventory[catKey] || []).join(", ");
-        html += `<tr>
-                  <td>${cat.label}</td>
-                  <td>${items || "Geen items"}</td>
-                </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("inventoryOverview").innerHTML = html;
-    }
+function updateInventoryDisplay() {
+  let inventory = JSON.parse(localStorage.getItem("inventory"));
+  let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
+  productCategories.forEach(cat => {
+    let catKey = cat.key;
+    let items = (inventory[catKey] || []).join(", ");
+    html += `<tr>
+              <td>${cat.label}</td>
+              <td>${items || "Geen items"}</td>
+            </tr>`;
+  });
+  html += "</table>";
+  document.getElementById("inventoryDisplay").innerHTML = html;
+}
 
-    function updateUserBarcodeDisplay() {
-      let container = document.getElementById("userBarcodeList");
-      container.innerHTML = "";
-      for (const [user, code] of Object.entries(userBarcodes)) {
-        let wrapper = document.createElement("div");
-        wrapper.className = "barcode-item";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "user-barcode-" + user.replace(/\s/g, '');
-        let caption = document.createElement("div");
-        caption.textContent = user;
-        wrapper.appendChild(svg);
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        JsBarcode(svg, code, { format: "CODE128", displayValue: false, width: 1, height: 30 });
-      }
-    }
+function updateInventoryOverview() {
+  let inventory = JSON.parse(localStorage.getItem("inventory"));
+  let html = "<table><tr><th>Categorie</th><th>Items</th></tr>";
+  productCategories.forEach(cat => {
+    let catKey = cat.key;
+    let items = (inventory[catKey] || []).join(", ");
+    html += `<tr>
+              <td>${cat.label}</td>
+              <td>${items || "Geen items"}</td>
+            </tr>`;
+  });
+  html += "</table>";
+  document.getElementById("inventoryOverview").innerHTML = html;
+}
 
-    // Nieuwe gebruiker toevoegen
-    function addNewUserFromInput() {
-      let newUser = document.getElementById("newUserName").value.trim();
-      if (!newUser) { 
-        showNotification("Voer een naam in voor de nieuwe klant.", "error"); 
-        return; 
-      }
-      if (userBarcodes[newUser]) { 
-        showNotification("Gebruiker bestaat al.", "error"); 
-        return;
-      }
-      let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-      userBarcodes[newUser] = newUserBarcode;
-      localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      purchases[newUser] = [];
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      currentUser = newUser;
-      showNotification(`Nieuwe gebruiker toegevoegd: ${newUser} en automatisch geselecteerd`, "success");
-      document.getElementById("newUserName").value = "";
-      updateOverzicht();
-      updateUserBarcodeDisplay();
-    }
+function updateUserBarcodeDisplay() {
+  let container = document.getElementById("userBarcodeList");
+  container.innerHTML = "";
+  for (const [user, code] of Object.entries(userBarcodes)) {
+    let wrapper = document.createElement("div");
+    wrapper.className = "barcode-item";
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "user-barcode-" + user.replace(/\s/g, '');
+    let caption = document.createElement("div");
+    caption.textContent = user;
+    wrapper.appendChild(svg);
+    wrapper.appendChild(caption);
+    container.appendChild(wrapper);
+    JsBarcode(svg, code, { format: "CODE128", displayValue: false, width: 1, height: 30 });
+  }
+}
 
-    /**********************
-     * ADMIN: PRODUCTBEHEER
-     **********************/
-    let editingProductIndex = -1;
-    function toggleProductManagement() {
-      let container = document.getElementById("adminProductManagement");
-      container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
-      updateAdminProductList();
+// Nieuwe gebruiker toevoegen
+function addNewUserFromInput() {
+  let newUser = document.getElementById("newUserName").value.trim();
+  if (!newUser) { 
+    showNotification("Voer een naam in voor de nieuwe klant.", "error"); 
+    return; 
+  }
+  if (userBarcodes[newUser]) { 
+    showNotification("Gebruiker bestaat al.", "error"); 
+    return;
+  }
+  let newUserBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+  userBarcodes[newUser] = newUserBarcode;
+  localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  purchases[newUser] = [];
+  localStorage.setItem("purchases", JSON.stringify(purchases));
+  currentUser = newUser;
+  showNotification(`Nieuwe gebruiker toegevoegd: ${newUser} en automatisch geselecteerd`, "success");
+  document.getElementById("newUserName").value = "";
+  updateOverzicht();
+  updateUserBarcodeDisplay();
+}
+
+/**********************
+ * ADMIN: PRODUCTBEHEER
+ **********************/
+let editingProductIndex = -1;
+function toggleProductManagement() {
+  let container = document.getElementById("adminProductManagement");
+  container.style.display = (container.style.display === "none" || container.style.display === "") ? "block" : "none";
+  updateAdminProductList();
+}
+function updateAdminProductList() {
+  let container = document.getElementById("productList");
+  container.innerHTML = "";
+  productCategories.forEach((product, index) => {
+    let div = document.createElement("div");
+    div.innerHTML = `${product.label} - €${product.defaultPrice.toFixed(2)} - Barcode: ${product.barcode}
+      <button onclick="editProduct(${index})">Bewerk</button>
+      <button onclick="deleteProduct(${index})">Verwijder</button>`;
+    container.appendChild(div);
+  });
+}
+function editProduct(index) {
+  editingProductIndex = index;
+  const product = productCategories[index];
+  document.getElementById("productName").value = product.label;
+  document.getElementById("productPrice").value = product.defaultPrice;
+  document.getElementById("addProductButton").textContent = "Update product";
+}
+function addOrUpdateProduct() {
+  let nameInput = document.getElementById("productName");
+  let priceInput = document.getElementById("productPrice");
+  let name = nameInput.value.trim();
+  let price = parseFloat(priceInput.value);
+  if (!name || isNaN(price)) {
+    showNotification("Vul zowel een productnaam als een geldige prijs in.", "error");
+    return;
+  }
+  if (editingProductIndex === -1) {
+    let newBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    productCategories.push({ 
+      key: name.toLowerCase().replace(/\s/g, ''), 
+      label: name, 
+      defaultPrice: price,
+      barcode: newBarcode
+    });
+    showNotification("Product (categorie) toegevoegd.", "success");
+  } else {
+    let newKey = name.toLowerCase().replace(/\s/g, '');
+    productCategories[editingProductIndex].label = name;
+    productCategories[editingProductIndex].defaultPrice = price;
+    productCategories[editingProductIndex].key = newKey;
+    showNotification("Product (categorie) bijgewerkt.", "success");
+    editingProductIndex = -1;
+    document.getElementById("addProductButton").textContent = "Voeg product toe";
+  }
+  nameInput.value = "";
+  priceInput.value = "";
+  localStorage.setItem("productCategories", JSON.stringify(productCategories));
+  updateAdminProductList();
+  loadProducts();
+  updateOverzicht();
+  updateInventoryDisplay();
+  updateInventoryOverview();
+  updateInventoryCategoryOptions();
+}
+function deleteProduct(index) {
+  if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
+    productCategories.splice(index, 1);
+    showNotification("Product verwijderd.", "success");
+    localStorage.setItem("productCategories", JSON.stringify(productCategories));
+    updateAdminProductList();
+    loadProducts();
+    updateOverzicht();
+    updateInventoryDisplay();
+    updateInventoryOverview();
+    updateInventoryCategoryOptions();
+  }
+}
+function updateBarcodeListModal() {
+  let container = document.getElementById("barcodeListModal");
+  container.innerHTML = "";
+  productCategories.forEach(product => {
+    let wrapper = document.createElement("div");
+    wrapper.style.marginBottom = "20px";
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "barcode-modal-" + product.key;
+    wrapper.appendChild(svg);
+    let caption = document.createElement("div");
+    caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
+    wrapper.appendChild(caption);
+    container.appendChild(wrapper);
+    JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
+  });
+}
+function showBarcodeList() {
+  updateBarcodeListModal();
+  document.getElementById("barcodeModal").style.display = "block";
+  document.getElementById("barcodeModal").scrollTop = 0;
+}
+function showAdminOverview() {
+  let code = prompt("Voer de admin code in:");
+  if (code !== "admin123") {
+    showNotification("Onjuiste code!", "error");
+    return;
+  }
+  document.getElementById("grid-container").style.display = "none";
+  document.getElementById("adminView").style.display = "block";
+  updateAdminContent();
+  updateInventoryOverview();
+  updateInventoryCategoryOptions();
+  updateUserBarcodeDisplay();
+}
+function hideAdminOverview() {
+  document.getElementById("adminView").style.display = "none";
+  document.getElementById("grid-container").style.display = "grid";
+}
+function removeAllInfo() {
+  let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
+  if (confirmText === "VERWIJDER") {
+    localStorage.removeItem("purchases");
+    updateOverzicht();
+    updateAdminContent();
+    showNotification("Alle informatie is verwijderd.", "success");
+  } else {
+    showNotification("Verwijderen geannuleerd.", "error");
+  }
+}
+function updateAdminContent() {
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  let overallTotal = 0;
+  let users = Object.keys(purchases).map(user => {
+    let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
+    overallTotal += totalSpent;
+    return { user, totalSpent };
+  });
+  users.sort((a, b) => b.totalSpent - a.totalSpent);
+  let html = `<p style="font-weight: bold; margin-bottom: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
+  html += "<table>";
+  html += "<tr><th>Gebruiker</th>";
+  productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
+  html += "<th>Totaal</th><th>Acties</th></tr>";
+  users.forEach(({user, totalSpent}) => {
+    html += `<tr><td>${user}</td>`;
+    productCategories.forEach(product => {
+      let count = purchases[user].filter(p => p.category === product.key).length;
+      html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
+    });
+    html += `<td>€${totalSpent.toFixed(2)}</td>
+             <td>
+               <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
+               <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button><br/>`;
+    if(purchases[user].length === 0) {
+      html += `<button onclick="removeUserCompletely('${user}')">Verwijder gebruiker</button><br/>`;
     }
-    function updateAdminProductList() {
-      let container = document.getElementById("productList");
-      container.innerHTML = "";
-      productCategories.forEach((product, index) => {
-        let div = document.createElement("div");
-        div.innerHTML = `${product.label} - €${product.defaultPrice.toFixed(2)} - Barcode: ${product.barcode}
-          <button onclick="editProduct(${index})">Bewerk</button>
-          <button onclick="deleteProduct(${index})">Verwijder</button>`;
-        container.appendChild(div);
-      });
-    }
-    function editProduct(index) {
-      editingProductIndex = index;
-      const product = productCategories[index];
-      document.getElementById("productName").value = product.label;
-      document.getElementById("productPrice").value = product.defaultPrice;
-      document.getElementById("addProductButton").textContent = "Update product";
-    }
-    function addOrUpdateProduct() {
-      let nameInput = document.getElementById("productName");
-      let priceInput = document.getElementById("productPrice");
-      let name = nameInput.value.trim();
-      let price = parseFloat(priceInput.value);
-      if (!name || isNaN(price)) {
-        showNotification("Vul zowel een productnaam als een geldige prijs in.", "error");
-        return;
-      }
-      if (editingProductIndex === -1) {
-        let newBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-        productCategories.push({ 
-          key: name.toLowerCase().replace(/\s/g, ''), 
-          label: name, 
-          defaultPrice: price,
-          barcode: newBarcode
-        });
-        showNotification("Product (categorie) toegevoegd.", "success");
-      } else {
-        let newKey = name.toLowerCase().replace(/\s/g, '');
-        productCategories[editingProductIndex].label = name;
-        productCategories[editingProductIndex].defaultPrice = price;
-        productCategories[editingProductIndex].key = newKey;
-        showNotification("Product (categorie) bijgewerkt.", "success");
-        editingProductIndex = -1;
-        document.getElementById("addProductButton").textContent = "Voeg product toe";
-      }
-      nameInput.value = "";
-      priceInput.value = "";
-      localStorage.setItem("productCategories", JSON.stringify(productCategories));
-      updateAdminProductList();
-      loadProducts();
-      updateOverzicht();
-      updateInventoryDisplay();
-      updateInventoryOverview();
-      updateInventoryCategoryOptions();
-    }
-    function deleteProduct(index) {
-      if (confirm("Weet je zeker dat je dit product wilt verwijderen?")) {
-        productCategories.splice(index, 1);
-        showNotification("Product verwijderd.", "success");
-        localStorage.setItem("productCategories", JSON.stringify(productCategories));
-        updateAdminProductList();
-        loadProducts();
-        updateOverzicht();
-        updateInventoryDisplay();
-        updateInventoryOverview();
-        updateInventoryCategoryOptions();
-      }
-    }
-    function updateBarcodeListModal() {
-      let container = document.getElementById("barcodeListModal");
-      container.innerHTML = "";
-      productCategories.forEach(product => {
-        let wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "barcode-modal-" + product.key;
-        wrapper.appendChild(svg);
-        let caption = document.createElement("div");
-        caption.textContent = product.label + " (Barcode: " + product.barcode + ")";
-        wrapper.appendChild(caption);
-        container.appendChild(wrapper);
-        JsBarcode(svg, product.barcode, { format: "CODE128", displayValue: true, width: 1, height: 25 });
-      });
-    }
-    function showBarcodeList() {
-      updateBarcodeListModal();
-      document.getElementById("barcodeModal").style.display = "block";
-      document.getElementById("barcodeModal").scrollTop = 0;
-    }
-    function showAdminOverview() {
-      let code = prompt("Voer de admin code in:");
-      if (code !== "admin123") {
-        showNotification("Onjuiste code!", "error");
-        return;
-      }
-      document.getElementById("grid-container").style.display = "none";
-      document.getElementById("adminView").style.display = "block";
-      updateAdminContent();
-      updateInventoryOverview();
-      updateInventoryCategoryOptions();
-      updateUserBarcodeDisplay();
-    }
-    function hideAdminOverview() {
-      document.getElementById("adminView").style.display = "none";
-      document.getElementById("grid-container").style.display = "grid";
-    }
-    function removeAllInfo() {
-      let confirmText = prompt("Weet je zeker dat je ALLE informatie wilt verwijderen? Dit kan niet ongedaan gemaakt worden. Typ 'VERWIJDER' om te bevestigen.");
-      if (confirmText === "VERWIJDER") {
-        localStorage.removeItem("purchases");
-        updateOverzicht();
-        updateAdminContent();
-        showNotification("Alle informatie is verwijderd.", "success");
-      } else {
-        showNotification("Verwijderen geannuleerd.", "error");
-      }
-    }
-    function updateAdminContent() {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      let overallTotal = 0;
-      let users = Object.keys(purchases).map(user => {
-        let totalSpent = purchases[user].reduce((sum, p) => sum + p.price, 0);
-        overallTotal += totalSpent;
-        return { user, totalSpent };
-      });
-      users.sort((a, b) => b.totalSpent - a.totalSpent);
-      let html = `<p style="font-weight: bold; margin-bottom: 10px;">Totaal uitgegeven in winkel: €${overallTotal.toFixed(2)}</p>`;
-      html += "<table>";
-      html += "<tr><th>Gebruiker</th>";
-      productCategories.forEach(product => { html += `<th>${product.label}</th>`; });
-      html += "<th>Totaal</th><th>Acties</th></tr>";
-      users.forEach(({user, totalSpent}) => {
-        html += `<tr><td>${user}</td>`;
-        productCategories.forEach(product => {
-          let count = purchases[user].filter(p => p.category === product.key).length;
-          html += `<td>${count > 0 ? product.label + " x" + count : "-"}</td>`;
-        });
-        html += `<td>€${totalSpent.toFixed(2)}</td>
-                 <td>
-                   <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
-                   <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button><br/>`;
-        if(purchases[user].length === 0) {
-          html += `<button onclick="removeUserCompletely('${user}')">Verwijder gebruiker</button><br/>`;
-        }
-        html += `<button onclick="removeUserBarcode('${user}')">Verwijder barcode</button>
-                 </td>
-                 </tr>`;
-      });
-      html += "</table>";
-      document.getElementById("adminContent").innerHTML = html;
-    }
-    function removeUserCompletely(user) {
-      if (confirm(`Weet je zeker dat je ${user} volledig wilt verwijderen (alle data inclusief barcode)?`)) {
-        delete userBarcodes[user];
-        let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-        delete purchases[user];
-        localStorage.setItem("purchases", JSON.stringify(purchases));
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateOverzicht();
-        updateUserBarcodeDisplay();
-        updateAdminContent();
-        showNotification(`Gebruiker ${user} volledig verwijderd.`, "success");
-      }
-    }
-    function removeUserBarcode(user) {
-      if (confirm(`Weet je zeker dat je de barcode van ${user} wilt verwijderen?`)) {
-        delete userBarcodes[user];
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateOverzicht();
-        updateUserBarcodeDisplay();
-        updateAdminContent();
-        showNotification(`Barcode van ${user} verwijderd.`, "success");
-      }
-    }
-    function removeCurrentUserBarcode() {
-      if (!currentUser) {
-        showNotification("Geen gebruiker geselecteerd.", "error");
-        return;
-      }
-      if (!userBarcodes[currentUser]) {
-        showNotification("Deze gebruiker heeft geen barcode.", "error");
-        return;
-      }
-      if (confirm(`Weet je zeker dat je de barcode van ${currentUser} wilt verwijderen?`)) {
-        delete userBarcodes[currentUser];
-        localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
-        updateOverzicht();
-        updateUserBarcodeDisplay();
-        showNotification(`Barcode van ${currentUser} verwijderd.`, "success");
-      }
-    }
-    function adminRemoveProduct(user) {
-      let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-      if (!purchases[user] || purchases[user].length === 0) {
-        showNotification("Deze gebruiker heeft geen aankopen.", "error");
-        return;
-      }
-      let categoryCounts = {};
-      purchases[user].forEach(purchase => {
-        categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
-      });
-      let message = `Welke aankoop wil je verwijderen voor ${user}? Voer het nummer in:\n`;
-      let categoryList = Object.keys(categoryCounts);
-      categoryList.forEach((catName, index) => {
-        message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
-      });
-      let input = prompt(message);
-      let selectedIndex = parseInt(input) - 1;
-      if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
-        showNotification("Ongeldige invoer.", "error");
-        return;
-      }
-      let selectedCategoryName = categoryList[selectedIndex];
-      let idx = purchases[user].findIndex(p => p.name === selectedCategoryName);
-      if (idx === -1) {
-        showNotification("Categorie niet gevonden.", "error");
-        return;
-      }
-      let removed = purchases[user].splice(idx, 1);
-      localStorage.setItem("purchases", JSON.stringify(purchases));
-      updateOverzicht();
-      updateAdminContent();
-      showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${user}.`, "success");
-    }
-    function adminRemoveAllGoods(user) {
-      if (confirm(`Weet je zeker dat je alle aankopen van ${user} wilt verwijderen?`)) {
-        let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-        if (!purchases[user] || purchases[user].length === 0) {
-          showNotification("Deze gebruiker heeft geen aankopen.", "error");
-          return;
-        }
-        purchases[user] = [];
-        localStorage.setItem("purchases", JSON.stringify(purchases));
-        updateOverzicht();
-        updateAdminContent();
-        showNotification(`Alle aankopen van ${user} zijn verwijderd.`, "success");
-      }
-    }
-    
-    function removePurchase() {
+    html += `<button onclick="removeUserBarcode('${user}')">Verwijder barcode</button>
+             </td>
+             </tr>`;
+  });
+  html += "</table>";
+  document.getElementById("adminContent").innerHTML = html;
+}
+function removeUserCompletely(user) {
+  if (confirm(`Weet je zeker dat je ${user} volledig wilt verwijderen (alle data inclusief barcode)?`)) {
+    delete userBarcodes[user];
+    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+    delete purchases[user];
+    localStorage.setItem("purchases", JSON.stringify(purchases));
+    localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+    updateOverzicht();
+    updateUserBarcodeDisplay();
+    updateAdminContent();
+    showNotification(`Gebruiker ${user} volledig verwijderd.`, "success");
+  }
+}
+function removeUserBarcode(user) {
+  if (confirm(`Weet je zeker dat je de barcode van ${user} wilt verwijderen?`)) {
+    delete userBarcodes[user];
+    localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+    updateOverzicht();
+    updateUserBarcodeDisplay();
+    updateAdminContent();
+    showNotification(`Barcode van ${user} verwijderd.`, "success");
+  }
+}
+function removeCurrentUserBarcode() {
   if (!currentUser) {
     showNotification("Geen gebruiker geselecteerd.", "error");
     return;
   }
-  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
-  if (!purchases[currentUser] || purchases[currentUser].length === 0) {
-    showNotification("Geen aankopen om te verwijderen.", "error");
+  if (!userBarcodes[currentUser]) {
+    showNotification("Deze gebruiker heeft geen barcode.", "error");
     return;
   }
-  
-  // Verwijder de laatste aankoop
-  let removedItem = purchases[currentUser].pop();
+  if (confirm(`Weet je zeker dat je de barcode van ${currentUser} wilt verwijderen?`)) {
+    delete userBarcodes[currentUser];
+    localStorage.setItem("userBarcodes", JSON.stringify(userBarcodes));
+    updateOverzicht();
+    updateUserBarcodeDisplay();
+    showNotification(`Barcode van ${currentUser} verwijderd.`, "success");
+  }
+}
+function adminRemoveProduct(user) {
+  let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+  if (!purchases[user] || purchases[user].length === 0) {
+    showNotification("Deze gebruiker heeft geen aankopen.", "error");
+    return;
+  }
+  let categoryCounts = {};
+  purchases[user].forEach(purchase => {
+    categoryCounts[purchase.name] = (categoryCounts[purchase.name] || 0) + 1;
+  });
+  let message = `Welke aankoop wil je verwijderen voor ${user}? Voer het nummer in:\n`;
+  let categoryList = Object.keys(categoryCounts);
+  categoryList.forEach((catName, index) => {
+    message += `${index + 1}. ${catName} (${categoryCounts[catName]}x)\n`;
+  });
+  let input = prompt(message);
+  let selectedIndex = parseInt(input) - 1;
+  if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= categoryList.length) {
+    showNotification("Ongeldige invoer.", "error");
+    return;
+  }
+  let selectedCategoryName = categoryList[selectedIndex];
+  let idx = purchases[user].findIndex(p => p.name === selectedCategoryName);
+  if (idx === -1) {
+    showNotification("Categorie niet gevonden.", "error");
+    return;
+  }
+  let removed = purchases[user].splice(idx, 1);
   localStorage.setItem("purchases", JSON.stringify(purchases));
-
-  // Markeer als een verwijderde aankoop
-  let removedPurchase = true;
-
-  // Update achievements MET removedPurchase-check
-  checkAchievements(currentUser, purchases[currentUser].reduce((sum, p) => sum + p.price, 0), purchases[currentUser], removedPurchase);
-
   updateOverzicht();
-  showNotification("Laatste aankoop verwijderd.", "success");
+  updateAdminContent();
+  showNotification(`Er is 1x ${removed[0].name} verwijderd voor ${user}.`, "success");
+}
+function adminRemoveAllGoods(user) {
+  if (confirm(`Weet je zeker dat je alle aankopen van ${user} wilt verwijderen?`)) {
+    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+    if (!purchases[user] || purchases[user].length === 0) {
+      showNotification("Deze gebruiker heeft geen aankopen.", "error");
+      return;
+    }
+    purchases[user] = [];
+    localStorage.setItem("purchases", JSON.stringify(purchases));
+    updateOverzicht();
+    updateAdminContent();
+    showNotification(`Alle aankopen van ${user} zijn verwijderd.`, "success");
+  }
 }
 
+function removePurchase() {
+if (!currentUser) {
+showNotification("Geen gebruiker geselecteerd.", "error");
+return;
+}
+let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+if (!purchases[currentUser] || purchases[currentUser].length === 0) {
+showNotification("Geen aankopen om te verwijderen.", "error");
+return;
+}
+
+// Verwijder de laatste aankoop
+let removedItem = purchases[currentUser].pop();
+localStorage.setItem("purchases", JSON.stringify(purchases));
+
+// Markeer als een verwijderde aankoop
+let removedPurchase = true;
+
+// Update achievements MET removedPurchase-check
+checkAchievements(currentUser, purchases[currentUser].reduce((sum, p) => sum + p.price, 0), purchases[currentUser], removedPurchase);
+
+updateOverzicht();
+showNotification("Laatste aankoop verwijderd.", "success");
+}
 
 function addInventoryItem() {
-      let categorySelect = document.getElementById("inventoryCategory");
-      let category = categorySelect.value;
-      let itemName = document.getElementById("inventoryItem").value.trim();
-      if (!category || !itemName) {
-        showNotification("Selecteer een categorie en voer een item naam in.", "error");
-        return;
-      }
-      let inventory = JSON.parse(localStorage.getItem("inventory"));
-      if (!inventory[category]) {
-        inventory[category] = [];
-      }
-      inventory[category].push(itemName);
-      localStorage.setItem("inventory", JSON.stringify(inventory));
-      updateInventoryDisplay();
-      updateInventoryOverview();
-      showNotification(`Item ${itemName} toegevoegd aan ${category}.`, "success");
-      document.getElementById("inventoryItem").value = "";
-    }
-    function updateInventoryCategoryOptions() {
-      let select = document.getElementById("inventoryCategory");
-      select.innerHTML = "";
-      productCategories.forEach(cat => {
-        let option = document.createElement("option");
-        option.value = cat.key;
-        option.textContent = cat.label;
-        select.appendChild(option);
-      });
-    }
-
-    window.addEventListener("load", () => {
-      document.getElementById("barcodeInput").focus();
-      loadProducts();
-      updateOverzicht();
-      updateInventoryDisplay();
-      updateUserBarcodeDisplay();
-      updateInventoryCategoryOptions();
-    });
-
-    // 🏆 **Achievements Lijst** 🏆
-let achievementsList = {
-  "Big Spender": { 
-    condition: (totalSpent) => totalSpent >= 50, 
-    icon: "🏆", 
-    hidden: false,
-    description: "Geef in totaal €50 of meer uit." 
-  },
-  "Kleine Belegger": { 
-    condition: (totalSpent) => totalSpent >= 10, 
-    icon: "💰", 
-    hidden: false,
-    description: "Geef in totaal €10 of meer uit." 
-  },
-  "Combinatie King": { 
-    condition: (_, purchases) => {
-      let uniqueCategories = new Set(purchases.map(p => p.category));
-      return uniqueCategories.size >= 3;
-    },
-    icon: "🔁", 
-    hidden: false,
-    description: "Koop 3 verschillende producten in één aankoop." 
-  },
-  "High Roller": { 
-    condition: (totalSpent) => totalSpent >= 100, 
-    icon: "🥇", 
-    hidden: false,
-    description: "Geef in totaal €100 of meer uit." 
-  },
-  "Vaste Klant": { 
-    condition: (_, __, daysPurchased) => daysPurchased.size >= 3, 
-    icon: "📅", 
-    hidden: false,
-    description: "Koop iets op 3 verschillende dagen." 
-  },
-  "De Koelkast Koning": { 
-    condition: (totalSpent) => totalSpent >= 250, 
-    icon: "🏴‍☠️", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
-  "Smaakverkenner": { 
-    condition: (_, purchases) => {
-      let uniqueItems = new Set(purchases.map(p => p.name));
-      return uniqueItems.size >= productCategories.length;
-    }, 
-    icon: "🏅", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
-  "De Spijtoptant": { 
-    condition: (_, __, ___, removedPurchase) => removedPurchase, 
-    icon: "❌", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
-  },
-  "De Omgekeerde Wereld": { 
-    condition: (_, __, ___, ____, emptyPurchase) => emptyPurchase, 
-    icon: "🔄", 
-    hidden: true,  // 🔒 Verborgen totdat behaald
-    description: "??? (Hidden Achievement)" 
-},
-
-  "Betaald met Interesse": { 
-    condition: (_, __, ___, ____, firstOfDay) => firstOfDay, 
-    icon: "🎖", 
-    hidden: true,
-    description: "??? (Hidden Achievement)" 
+  let categorySelect = document.getElementById("inventoryCategory");
+  let category = categorySelect.value;
+  let itemName = document.getElementById("inventoryItem").value.trim();
+  if (!category || !itemName) {
+    showNotification("Selecteer een categorie en voer een item naam in.", "error");
+    return;
   }
+  let inventory = JSON.parse(localStorage.getItem("inventory"));
+  if (!inventory[category]) {
+    inventory[category] = [];
+  }
+  inventory[category].push(itemName);
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+  updateInventoryDisplay();
+  updateInventoryOverview();
+  showNotification(`Item ${itemName} toegevoegd aan ${category}.`, "success");
+  document.getElementById("inventoryItem").value = "";
+}
+function updateInventoryCategoryOptions() {
+  let select = document.getElementById("inventoryCategory");
+  select.innerHTML = "";
+  productCategories.forEach(cat => {
+    let option = document.createElement("option");
+    option.value = cat.key;
+    option.textContent = cat.label;
+    select.appendChild(option);
+  });
+}
 
-};
+window.addEventListener("load", () => {
+  document.getElementById("barcodeInput").focus();
+  loadProducts();
+  updateOverzicht();
+  updateInventoryDisplay();
+  updateUserBarcodeDisplay();
+  updateInventoryCategoryOptions();
+});
+
+// 🏆 **Achievements Lijst met individuele functies** 🏆
+let achievementsList = {
+   "Big Spender": { 
+     check: checkBigSpender, 
+     icon: "🏆", 
+     hidden: false,
+     description: "Geef in totaal €50 of meer uit." 
+   },
+   "Kleine Belegger": { 
+     check: checkKleineBelegger, 
+     icon: "💰", 
+     hidden: false,
+     description: "Geef in totaal €10 of meer uit." 
+   },
+   "Combinatie King": { 
+     check: checkCombinatieKingDuringPurchase,
+     icon: "🔁", 
+     hidden: false,
+     description: "Koop 3 verschillende producten in één aankoop." 
+   },
+   "High Roller": { 
+     check: checkHighRoller, 
+     icon: "🥇", 
+     hidden: false,
+     description: "Geef in totaal €100 of meer uit." 
+   },
+   "Vaste Klant": { 
+     check: checkVasteKlant, 
+     icon: "📅", 
+     hidden: false,
+     description: "Koop iets op 3 verschillende dagen." 
+   },
+   "De Koelkast Koning": { 
+     check: checkKoelkastKoning, 
+     icon: "🏴‍☠️", 
+     hidden: true,
+     description: "??? (Hidden Achievement)" 
+   },
+   "Smaakverkenner": { 
+     check: checkSmaakverkenner, 
+     icon: "🏅", 
+     hidden: true,
+     description: "??? (Hidden Achievement)" 
+   },
+   "De Spijtoptant": { 
+     check: checkSpijtoptant, 
+     icon: "❌", 
+     hidden: true,
+     description: "??? (Hidden Achievement)" 
+   },
+   "De Omgekeerde Wereld": { 
+     check: checkOmgekeerdeWereld, 
+     icon: "🔄", 
+     hidden: true,
+     description: "??? (Hidden Achievement)" 
+   },
+   "Betaald met Interesse": { 
+     check: checkBetaaldMetInteresse, 
+     icon: "🎖", 
+     hidden: true,
+     description: "??? (Hidden Achievement)" 
+   }
+ };
 
 // 🏆 **Behaalde Achievements Opslaan in localStorage** 🏆
 let userAchievements = JSON.parse(localStorage.getItem("userAchievements")) || {};
 
 function checkAchievements(user, totalSpent, purchaseList, removedPurchase = false, emptyPurchase = false) {
-    let userPurchases = purchaseList || [];
-    
-    let daysPurchased = new Set(userPurchases.map(p => new Date(p.timestamp).toDateString()));
-
-    if (!userAchievements[user]) {
-        userAchievements[user] = [];
-    }
-
-    let achievementQueue = [];
-
-    for (let [achievement, { condition, icon, hidden }] of Object.entries(achievementsList)) {
-        try {
-            if (!userAchievements[user].includes(achievement) && 
-                condition(totalSpent, userPurchases, daysPurchased, removedPurchase, emptyPurchase)) {
-                userAchievements[user].push(achievement);
-                achievementQueue.push({ 
-                    title: `${icon} ${achievement}`, 
-                    message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` 
-                });
-            }
-        } catch (error) {
-            console.error(`Fout in achievement '${achievement}':`, error);
-        }
-    }
-
-    localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
-
-    achievementQueue.forEach((ach, index) => {
-        setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
-    });
-}
-
+   let userPurchases = purchaseList || [];
+   
+   let daysPurchased = new Set(userPurchases.map(p => new Date(p.timestamp).toDateString()));
+ 
+   if (!userAchievements[user]) {
+     userAchievements[user] = [];
+   }
+ 
+   let achievementQueue = [];
+ 
+   for (let [achievement, { check, icon, hidden }] of Object.entries(achievementsList)) {
+     try {
+       if (!userAchievements[user].includes(achievement) && 
+           check(totalSpent, userPurchases, daysPurchased, removedPurchase, emptyPurchase)) {
+         userAchievements[user].push(achievement);
+         achievementQueue.push({ 
+           title: `${icon} ${achievement}`, 
+           message: hidden ? "??? (Hidden Achievement)" : `Gefeliciteerd! Je hebt "${achievement}" behaald!` 
+         });
+       }
+     } catch (error) {
+       console.error(`Fout in achievement '${achievement}':`, error);
+     }
+   }
+ 
+   localStorage.setItem("userAchievements", JSON.stringify(userAchievements));
+ 
+   achievementQueue.forEach((ach, index) => {
+     setTimeout(() => showBigAchievementPopup(ach.title, ach.message), index * 4000);
+   });
+ }
 
 // 🎉 **Pop-up voor Nieuw Achievement** 🎉
 function showBigAchievementPopup(title, message) {
-  let popup = document.createElement("div");
-  popup.style.position = "fixed";
-  popup.style.top = "50%";
-  popup.style.left = "50%";
-  popup.style.transform = "translate(-50%, -50%)";
-  popup.style.background = "gold";
-  popup.style.padding = "20px";
-  popup.style.borderRadius = "15px";
-  popup.style.boxShadow = "0px 4px 10px rgba(0,0,0,0.3)";
-  popup.style.zIndex = "1000";
-  popup.style.textAlign = "center";
-  popup.style.fontSize = "24px";
-  popup.style.fontWeight = "bold";
-  popup.style.color = "#333";
-  popup.style.animation = "achievementFadeIn 0.5s ease-in-out";
-
-  popup.innerHTML = `<h2>${title}</h2><p>${message}</p>`;
-
-  document.body.appendChild(popup);
-
-  setTimeout(() => {
-    popup.style.animation = "achievementFadeOut 0.5s ease-in-out";
-    setTimeout(() => popup.remove(), 500);
-  }, 3000);
-}
+   let popup = document.createElement("div");
+   popup.style.position = "fixed";
+   popup.style.top = "50%";
+   popup.style.left = "50%";
+   popup.style.transform = "translate(-50%, -50%)";
+   popup.style.background = "gold";
+   popup.style.padding = "20px";
+   popup.style.borderRadius = "15px";
+   popup.style.boxShadow = "0px 4px 10px rgba(0,0,0,0.3)";
+   popup.style.zIndex = "1000";
+   popup.style.textAlign = "center";
+   popup.style.fontSize = "24px";
+   popup.style.fontWeight = "bold";
+   popup.style.color = "#333";
+   popup.style.animation = "achievementFadeIn 0.5s ease-in-out";
+ 
+   popup.innerHTML = `<h2>${title}</h2><p>${message}</p>`;
+ 
+   document.body.appendChild(popup);
+ 
+   setTimeout(() => {
+     popup.style.animation = "achievementFadeOut 0.5s ease-in-out";
+     setTimeout(() => popup.remove(), 500);
+   }, 3000);
+ }
 
 // 🏅 **Toon Alle Achievements** 🏅
 function showAchievementList() {
-  let html = `<h3 style="text-align:center;">🏅 Alle Mogelijke Achievements</h3>`;
-  
-  html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">`;
+let html = `<h3 style="text-align:center;">🏅 Alle Mogelijke Achievements</h3>`;
 
-  for (let [achievement, { icon, hidden, description }] of Object.entries(achievementsList)) {
-    let isAchieved = userAchievements[currentUser]?.includes(achievement);
-    let displayName = isAchieved || !hidden ? achievement : "??? (Hidden Achievement)";
-    let status = isAchieved ? "✅ Behaald" : "🔄 Nog te behalen";
-    let achievementDescription = hidden && !isAchieved ? "??? (Hidden Achievement)" : description;
+html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">`;
 
-    html += `
-      <div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
-        <strong>${icon} ${displayName}</strong><br>
-        <span style="color: ${isAchieved ? 'green' : 'red'}; font-weight: bold;">${status}</span><br>
-        <small style="color: gray;">${achievementDescription}</small>
-      </div>
-    `;
-  }
+for (let [achievement, { icon, hidden, description }] of Object.entries(achievementsList)) {
+let isAchieved = userAchievements[currentUser]?.includes(achievement);
+let displayName = isAchieved || !hidden ? achievement : "??? (Hidden Achievement)";
+let status = isAchieved ? "✅ Behaald" : "🔄 Nog te behalen";
+let achievementDescription = hidden && !isAchieved ? "??? (Hidden Achievement)" : description;
 
-  html += `</div>`;
+html += `
+  <div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
+    <strong>${icon} ${displayName}</strong><br>
+    <span style="color: ${isAchieved ? 'green' : 'red'}; font-weight: bold;">${status}</span><br>
+    <small style="color: gray;">${achievementDescription}</small>
+  </div>
+`;
+}
 
-  document.getElementById("allAchievementsContent").innerHTML = html;
-  document.getElementById("achievementListModal").style.display = "block";
+html += `</div>`;
+
+document.getElementById("allAchievementsContent").innerHTML = html;
+document.getElementById("achievementListModal").style.display = "block";
+}
+
+ // **Functies voor individuele achievements**
+ function checkBigSpender(user, totalSpent) {
+    return totalSpent >= 50;
+}
+ 
+ function checkKleineBelegger(user, totalSpent) {
+    return totalSpent >= 10;
+}
+
+ function checkCombinatieKingDuringPurchase() {
+   let selectedCategories = Object.keys(selectedCounts); // Haal de categorieën op die geselecteerd zijn
+   return selectedCategories.length >= 3; // Check of er minstens 3 verschillende categorieën zijn aangevinkt
+}
+ 
+function checkHighRoller(user, totalSpent) {
+    return totalSpent >= 100; // Wordt toegekend bij €100 of meer
+}
+
+ function checkVasteKlant(user) {
+   let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+   if (!purchases[user]) return false;
+
+   let uniqueDays = new Set(purchases[user].map(p => new Date(p.timestamp).toDateString()));
+   return uniqueDays.size >= 3;
+}
+
+function logPurchaseDate(user) {
+   let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+   if (!purchases[user]) {
+       purchases[user] = [];
+   }
+   purchases[user].push({ timestamp: new Date().toISOString() });
+   localStorage.setItem("purchases", JSON.stringify(purchases));
+}
+ 
+function checkKoelkastKoning(user, totalSpent) {
+    return totalSpent >= 250; // Wordt toegekend bij €250 of meer
+}
+ 
+ function checkSmaakverkenner(user) {
+    let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+    if (!purchases[user]) return false;
+
+    let purchasedItems = new Set(purchases[user].map(p => p.name)); // Haal alle unieke gekochte producten op
+    let allProducts = new Set(productCategories.map(p => p.label)); // Haal alle producten op die in de winkel beschikbaar zijn
+
+    return [...allProducts].every(product => purchasedItems.has(product)); // Check of alle producten minstens 1x gekocht zijn
+}
+
+ 
+ function checkSpijtoptant(_, __, ___, removedPurchase) {
+   return removedPurchase;
+ }
+ 
+ function checkOmgekeerdeWereld(emptyPurchase) {
+    return emptyPurchase; // True als er niets aangeslagen is en de aankoop toch wordt bevestigd
+}
+
+ 
+ function checkBetaaldMetInteresse(user) {
+   let lastPurchaseDay = localStorage.getItem("firstPurchaseOfDay");
+
+   let today = new Date().toDateString();
+   if (lastPurchaseDay === today) {
+       return false; // Er is vandaag al een aankoop gedaan, dus geen achievement
+   }
+
+   // Markeer deze dag als "eerste aankoop is gedaan"
+   localStorage.setItem("firstPurchaseOfDay", today);
+   return true;
 }
 
 // 🏅 **Toon Behaalde Achievements van Huidige Gebruiker** 🏅
 function showAchievements() {
-  if (!currentUser) {
-    showNotification("Geen gebruiker geselecteerd.", "error");
-    return;
-  }
+if (!currentUser) {
+showNotification("Geen gebruiker geselecteerd.", "error");
+return;
+}
 
-  let achievements = userAchievements[currentUser] || [];
-  let html = "<ul>";
-  achievements.forEach(a => {
-    html += `<li>${achievementsList[a].icon} ${a}</li>`;
-  });
-  html += "</ul>";
+let achievements = userAchievements[currentUser] || [];
+let html = "<ul>";
+achievements.forEach(a => {
+html += `<li>${achievementsList[a].icon} ${a}</li>`;
+});
+html += "</ul>";
 
-  document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
-  document.getElementById("achievementModal").style.display = "block";
+document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
+document.getElementById("achievementModal").style.display = "block";
 }
 
 // Modal sluiten
 function closeAchievementModal() {
-  document.getElementById("achievementModal").style.display = "none";
+document.getElementById("achievementModal").style.display = "none";
 }
 
 function closeAchievementListModal() {
-  document.getElementById("achievementListModal").style.display = "none";
+document.getElementById("achievementListModal").style.display = "none";
 }
 
   </script>

@@ -996,7 +996,8 @@ function updateAdminContent() {
                <button onclick="adminRemoveProduct('${user}')">Verwijder 1 aankoop</button><br/>
                <button onclick="adminRemoveAllGoods('${user}')">Verwijder alle aankopen</button><br/>`;
     if(purchases[user].length === 0) {
-      html += `<button onclick="removeUserCompletely('${user}')">Verwijder gebruiker</button><br/>`;
+      html += `<button onclick="removeUserCompletely(decodeURIComponent('${encodeURIComponent(user)}'))">Verwijder gebruiker</button><br/>`;
+
     }
     html += `<button onclick="removeUserBarcode('${user}')">Verwijder barcode</button>
              </td>
@@ -1181,7 +1182,7 @@ let achievementsList = {
      check: checkHighRoller, 
      icon: "🥇", 
      hidden: false,
-     description: "Geef in totaal €100 of meer uit." 
+     description: "Geef in totaal €100 of meer u it." 
    },
    "Vaste Klant": { 
      check: checkVasteKlant, 

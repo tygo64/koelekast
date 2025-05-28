@@ -337,6 +337,11 @@ body {
     <div id="adminContent"></div>
     <button onclick="removeAllInfo()" style="background-color:#ff7979;">Verwijder alle info</button>
     <button onclick="hideAdminOverview()" style="background-color:#6c757d;">Terug</button>
+    <h3>🔧 Data Beheer</h3>
+<button onclick="exportAllData()">📤 Exporteer Data</button>
+<input type="file" id="importFile" style="display:none" onchange="importAllData(event)" />
+<button onclick="document.getElementById('importFile').click()">Importeer Data 📥 </button>
+
     <div class="admin-section">
       <h2>Productbeheer</h2>
       <button onclick="toggleProductManagement()">Producten beheren</button>
@@ -1402,6 +1407,74 @@ html += "</ul>";
 document.getElementById("achievementContent").innerHTML = achievements.length > 0 ? html : "<p>Geen achievements behaald.</p>";
 document.getElementById("achievementModal").style.display = "block";
 }
+
+function exportAllData() {
+  const data = {
+    purchases: JSON.parse(localStorage.getItem("purchases")) || {},
+    inventory: JSON.parse(localStorage.getItem("inventory")) || {},
+    userAchievements: JSON.parse(localStorage.getItem("userAchievements")) || {},
+    firstPurchaseOfDay: localStorage.getItem("firstPurchaseOfDay") || null
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `koop_data_export_${new Date().toISOString().split("T")[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showNotification("Data succesvol geëxporteerd!", "success");
+}
+
+function importAllData(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    showNotification("Geen bestand geselecteerd.", "error");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      // Data overschrijven in localStorage
+      if (data.purchases) localStorage.setItem("purchases", JSON.stringify(data.purchases));
+      if (data.inventory) localStorage.setItem("inventory", JSON.stringify(data.inventory));
+      if (data.userAchievements) localStorage.setItem("userAchievements", JSON.stringify(data.userAchievements));
+      if (data.firstPurchaseOfDay !== undefined) localStorage.setItem("firstPurchaseOfDay", data.firstPurchaseOfDay);
+
+      // 🚀 Update alles na import
+      updateOverzicht();
+      updateInventoryDisplay();
+      updateInventoryOverview();
+      updateUserBarcodeDisplay();
+      updateInventoryCategoryOptions();
+
+      // Zorg dat admin interface volledig herlaadt
+      if (typeof updateAdminContent === "function") {
+        updateAdminContent();
+      }
+
+      // Eventueel: standaard user kiezen als er één bekend is
+      let users = Object.keys(data.purchases || {});
+      if (users.length > 0) {
+        currentUser = users[0]; // Zet de eerste user als actief
+        showNotification(`Data geladen voor ${currentUser}.`, "info");
+      }
+
+      showNotification("Data succesvol geïmporteerd!", "success");
+
+    } catch (err) {
+      console.error("Fout bij importeren:", err);
+      showNotification("Fout bij importeren van data.", "error");
+    }
+  };
+  reader.readAsText(file);
+}
+
+
 
 // Modal sluiten
 function closeAchievementModal() {
